@@ -38,23 +38,6 @@
     .img-fit-contain {
         object-fit: contain;
     }
-    
-    /* PWA Floating Install Banner */
-    #pwaInstallBanner {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 9999;
-        width: 90%;
-        max-width: 440px;
-        background: #ffffff;
-        border-radius: 16px;
-        box-shadow: 0 10px 30px rgba(107, 45, 139, 0.25);
-        border: 2px solid #6B2D8B;
-        padding: 16px;
-        display: none;
-    }
     </style>
 </head>
 <body>
@@ -70,9 +53,15 @@
                 </div>
             </a>
 
-            <button class="navbar-toggler border-0 p-2 shadow-none ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation" id="mobileNavbarToggler">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <div class="d-flex align-items-center gap-2 ms-auto d-lg-none">
+                <!-- Mobile Install App Button -->
+                <button id="pwaInstallBtnMobile" class="btn btn-sm btn-outline-purple d-none">
+                    <i class="fa-solid fa-mobile-screen me-1"></i> Install App
+                </button>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
 
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
@@ -86,20 +75,29 @@
                     <li class="nav-item"><a class="nav-link fw-semibold text-red" href="{% url 'anonymous_chat' %}"><i class="fa-solid fa-user-shield me-1"></i>Anonymous Support</a></li>
                     <li class="nav-item ms-lg-2"><a class="btn btn-red" href="{% url 'donate' %}"><i class="fa-solid fa-heart me-1"></i>Donate</a></li>
 
+                    <!-- PWA Desktop Install Button -->
+                    <li class="nav-item ms-lg-2 d-none d-lg-block">
+                        <button id="pwaInstallBtnDesktop" class="btn btn-outline-purple btn-sm d-none">
+                            <i class="fa-solid fa-download me-1"></i> Install App
+                        </button>
+                    </li>
+
                     {% if user.is_authenticated %}
                         <!-- Admin Notification Bell Icon for Staff/Admins -->
                         {% if user.is_staff or user.role != 'client' %}
                         <li class="nav-item dropdown ms-lg-2">
-                            <a class="nav-link position-relative text-purple" href="#" role="button" data-bs-toggle="dropdown" id="adminNotifBell">
+                            <a class="nav-link position-relative text-purple" href="#" role="button" data-bs-toggle="dropdown">
                                 <i class="fa-solid fa-bell fs-5"></i>
-                                <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {% if unread_notifications == 0 %}d-none{% endif %}" style="font-size:10px;">
+                                {% if unread_notifications > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:10px;">
                                     {{ unread_notifications }}
                                 </span>
+                                {% endif %}
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-lg p-2" style="width:320px;max-height:400px;overflow-y:auto;" id="notifDropdownList">
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg p-2" style="width:320px;max-height:400px;overflow-y:auto;">
                                 <li><strong class="dropdown-header text-purple d-flex justify-content-between align-items-center">
                                     <span><i class="fa-solid fa-bell me-1"></i> Admin Notifications</span>
-                                    <span class="badge bg-purple" id="notifCountLabel">{{ unread_notifications }} New</span>
+                                    <span class="badge bg-purple">{{ unread_notifications }} New</span>
                                 </strong></li>
                                 <li><hr class="dropdown-divider"></li>
                                 {% for notif in notifications_list %}
@@ -113,7 +111,7 @@
                                     </a>
                                 </li>
                                 {% empty %}
-                                <li id="noNotifMsg"><span class="dropdown-item text-muted small text-center py-2">No unread admin notifications</span></li>
+                                <li><span class="dropdown-item text-muted small text-center py-2">No unread admin notifications</span></li>
                                 {% endfor %}
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-center small text-purple fw-bold" href="{% url 'admin_stats_dashboard' %}">View All in Dashboard</a></li>
@@ -148,26 +146,7 @@
         </div>
     </nav>
 
-    <!-- PWA Install Popup Banner (Shows once, disappears after install or dismiss) -->
-    <div id="pwaInstallBanner">
-        <div class="d-flex align-items-center gap-3">
-            <img src="{% static 'images/logo.png' %}" width="48" height="48" class="rounded-3 flex-shrink-0" alt="HRC App">
-            <div class="flex-grow-1">
-                <h6 class="fw-bold text-purple mb-0">Install Hope Reception Centre App</h6>
-                <small class="text-muted">Access counseling, updates & sessions from your phone home screen.</small>
-            </div>
-        </div>
-        <div class="d-flex gap-2 mt-3">
-            <button onclick="installPWAApp()" class="btn btn-purple btn-sm flex-grow-1 fw-bold">
-                <i class="fa-solid fa-download me-1"></i> Install App
-            </button>
-            <button onclick="dismissPWABanner()" class="btn btn-light btn-sm border text-muted">
-                Later
-            </button>
-        </div>
-    </div>
-
-    <!-- Global Messages Alert -->
+    <!-- Global Messages Toast / Alert -->
     {% if messages %}
     <div class="container mt-3">
         {% for message in messages %}
@@ -194,6 +173,12 @@
                         {{ site.site_name }}
                     </h5>
                     <p class="text-white-50 small mb-3">{{ site.about_text|truncatewords:30 }}</p>
+                    <div class="d-flex gap-2">
+                        <a href="https://facebook.com" target="_blank" class="btn btn-sm btn-outline-light rounded-circle"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="https://twitter.com" target="_blank" class="btn btn-sm btn-outline-light rounded-circle"><i class="fa-brands fa-x-twitter"></i></a>
+                        <a href="https://youtube.com" target="_blank" class="btn btn-sm btn-outline-light rounded-circle"><i class="fa-brands fa-youtube"></i></a>
+                        <a href="https://wa.me/256770000000" target="_blank" class="btn btn-sm btn-outline-light rounded-circle"><i class="fa-brands fa-whatsapp"></i></a>
+                    </div>
                 </div>
                 <div class="col-lg-2 col-6">
                     <h6 class="text-white fw-bold mb-3">Quick Links</h6>
@@ -232,52 +217,37 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/bootstrap.bundle.min.js"></script>
 
+    <!-- Service Worker & PWA Install Script -->
     <script>
-    // Mobile Navigation Toggler Fallback
-    const mobileToggler = document.getElementById('mobileNavbarToggler');
-    const mobileNavMenu = document.getElementById('navbarNav');
-    if (mobileToggler && mobileNavMenu) {
-        mobileToggler.addEventListener('click', function(e) {
-            e.stopPropagation();
-            mobileNavMenu.classList.toggle('show');
-        });
-    }
-
-    // ─── Persistent PWA Install Prompt (Shows once, never repeats after install/dismiss) ───
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        const isDismissed = localStorage.getItem('hrc_pwa_dismissed') === 'true';
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-
-        if (!isDismissed && !isStandalone) {
-            const banner = document.getElementById('pwaInstallBanner');
-            if (banner) banner.style.display = 'block';
-        }
+        const btnDesktop = document.getElementById('pwaInstallBtnDesktop');
+        const btnMobile = document.getElementById('pwaInstallBtnMobile');
+        if (btnDesktop) btnDesktop.classList.remove('d-none');
+        if (btnMobile) btnMobile.classList.remove('d-none');
     });
 
-    function installPWAApp() {
+    function triggerPWAInstall() {
         if (deferredPrompt) {
             deferredPrompt.prompt();
             deferredPrompt.userChoice.then((choiceResult) => {
-                localStorage.setItem('hrc_pwa_dismissed', 'true');
-                dismissPWABanner();
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User installed HRC App');
+                }
                 deferredPrompt = null;
             });
-        } else {
-            dismissPWABanner();
         }
     }
 
-    function dismissPWABanner() {
-        localStorage.setItem('hrc_pwa_dismissed', 'true');
-        const banner = document.getElementById('pwaInstallBanner');
-        if (banner) banner.style.display = 'none';
-    }
+    const btnDesktop = document.getElementById('pwaInstallBtnDesktop');
+    const btnMobile = document.getElementById('pwaInstallBtnMobile');
+    if (btnDesktop) btnDesktop.addEventListener('click', triggerPWAInstall);
+    if (btnMobile) btnMobile.addEventListener('click', triggerPWAInstall);
 
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/static/sw.js').catch(err => console.log('SW error:', err));
+        navigator.serviceWorker.register('/static/sw.js').catch(err => console.log('SW registration failed:', err));
     }
 
     // ─── Real-Time Phone Sound Chime Notification System for Admins ─────────
@@ -287,32 +257,45 @@
     function playNotificationChime() {
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Double chime tone (E5 -> A5 phone notification melody)
             const now = ctx.currentTime;
             
-            // Single clean phone notification chime (A5 note tone, 250ms duration)
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(880, now); // A5 note
-            gain.gain.setValueAtTime(0.35, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(now);
-            osc.stop(now + 0.25);
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(659.25, now); // E5
+            gain1.gain.setValueAtTime(0.3, now);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+            osc1.connect(gain1);
+            gain1.connect(ctx.destination);
+            osc1.start(now);
+            osc1.stop(now + 0.3);
+
+            const osc2 = ctx.createOscillator();
+            const gain2 = ctx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(880, now + 0.15); // A5
+            gain2.gain.setValueAtTime(0.4, now + 0.15);
+            gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+            osc2.connect(gain2);
+            gain2.connect(ctx.destination);
+            osc2.start(now + 0.15);
+            osc2.stop(now + 0.5);
         } catch(e) {
             console.log('Audio chime error:', e);
         }
 
+        // Also trigger browser system notification sound if supported & permitted
         if ("Notification" in window && Notification.permission === "granted") {
-            new Notification("Hope Reception Centre — New Activity", {
-                body: "A new appointment, counseling, or anonymous support message was received.",
+            new Notification("New HRC Admin Notification", {
+                body: "A new appointment or anonymous counseling request was received!",
                 icon: "/static/images/logo.png"
             });
         }
     }
 
-    // Request notification permission once on click
+    // Request notification permissions on user interaction
     document.addEventListener('click', function askPerm() {
         if ("Notification" in window && Notification.permission === "default") {
             Notification.requestPermission();
@@ -326,13 +309,6 @@
             .then(data => {
                 if (data.count > previousUnreadCount) {
                     playNotificationChime();
-                    const badge = document.getElementById('notifBadge');
-                    const countLabel = document.getElementById('notifCountLabel');
-                    if (badge) {
-                        badge.innerText = data.count;
-                        badge.classList.remove('d-none');
-                    }
-                    if (countLabel) countLabel.innerText = data.count + ' New';
                 }
                 previousUnreadCount = data.count;
             })
