@@ -188,3 +188,24 @@ def verify_donation(request, pk):
     donation.save()
     messages.success(request, f"Donation of {donation.amount} from {donation.donor_name} verified.")
     return redirect('admin_stats_dashboard')
+
+
+from django.http import JsonResponse
+from counseling.models import AdminNotification
+
+def api_unread_notifications(request):
+    if not request.user.is_authenticated or not (request.user.is_staff or getattr(request.user, 'role', '') in ['super_admin', 'executive_director', 'director', 'counselor']):
+        return JsonResponse({'count': 0, 'latest': []})
+
+    unread = AdminNotification.objects.filter(is_read=False)
+    count = unread.count()
+    latest_items = list(unread.order_by('-created_at')[:5].values('id', 'title', 'notification_type', 'message', 'created_at', 'link'))
+    
+    for item in latest_items:
+        item['created_at'] = item['created_at'].strftime('%H:%M')
+
+    return JsonResponse({
+        'count': count,
+        'latest': latest_items
+    })
+

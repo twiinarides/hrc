@@ -21,6 +21,7 @@ urlpatterns = [
     path('dashboard/reject-story/<int:pk>/', core_views.reject_story, name='reject_story'),
     path('dashboard/approve-session/<int:pk>/', core_views.approve_session, name='approve_session'),
     path('dashboard/verify-donation/<int:pk>/', core_views.verify_donation, name='verify_donation'),
+    path('api/notifications/unread/', core_views.api_unread_notifications, name='api_unread_notifications'),
 
     # Accounts (custom)
     path('accounts/register/', accounts_views.register_view, name='register'),
