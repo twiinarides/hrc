@@ -10,15 +10,28 @@
   --gray-border: #E0E0E0;
 }
 
-body {
+/* Global Reset & Responsiveness for All Gadgets */
+html, body {
   font-family: 'Inter', sans-serif;
   color: var(--dark-charcoal);
   background-color: var(--white);
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+img, video, iframe, embed, object {
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Playfair Display', serif;
   font-weight: 700;
+  word-wrap: break-word;
 }
 
 .text-purple { color: var(--purple-primary) !important; }
@@ -59,6 +72,25 @@ h1, h2, h3, h4, h5, h6 {
 .navbar-hrc {
   background-color: var(--white);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Mobile Navbar Expansion Rules */
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border: 1px solid var(--gray-border);
+  }
+  .navbar-nav .nav-link {
+    padding: 8px 12px !important;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .navbar-nav .nav-item:last-child .nav-link {
+    border-bottom: none;
+  }
 }
 
 .hero-banner {
