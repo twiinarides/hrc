@@ -85,11 +85,41 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
+.navbar-logo {
+  height: 48px;
+  width: auto;
+  transition: all 0.3s ease;
+}
+
 /* ── Mobile Navbar ─────────────────────────────────────────────────────── */
 @media (max-width: 991.98px) {
+  .navbar-logo {
+    height: 40px; /* Slightly smaller on tablets */
+  }
   .navbar-brand span.fs-5 {
     font-size: 1rem !important;
   }
+}
+
+/* Extra small phones (e.g. iPhone SE, old Androids) */
+@media (max-width: 400px) {
+  .navbar-brand {
+    max-width: 75vw; /* Ensure it leaves room for toggler */
+  }
+  .navbar-logo {
+    height: 32px; /* Much smaller on tiny screens */
+  }
+  .navbar-brand span.fs-5 {
+    font-size: 0.85rem !important;
+    white-space: normal;
+    line-height: 1.1 !important;
+  }
+  .navbar-brand small.fs-7 {
+    font-size: 0.65rem !important;
+    display: block;
+    margin-top: 2px;
+  }
+}
   /* Style the open collapse panel — do NOT override display or visibility */
   .navbar-collapse.show {
     background-color: #ffffff;
