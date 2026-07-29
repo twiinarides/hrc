@@ -162,7 +162,23 @@ let processedIceViewer = 0; // count
 const rtcConfig = {
     iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' }
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        {
+            urls: 'turn:openrelay.metered.ca:80',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+        },
+        {
+            urls: 'turn:openrelay.metered.ca:443',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+        },
+        {
+            urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+        }
     ]
 };
 
@@ -327,11 +343,8 @@ async function stopAdminBroadcasting(notifyServer = true) {
 
 // ── Viewer Functions ──────────────────────────────────────────────────────
 
-let viewerToken = localStorage.getItem('hrc_viewer_token');
-if (!viewerToken) {
-    viewerToken = Math.random().toString(36).substring(2, 15);
-    localStorage.setItem('hrc_viewer_token', viewerToken);
-}
+// Generate a fresh token for every page load to ensure WebRTC renegotiation works
+let viewerToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
 // Add an overlay for users to click if autoplay fails (due to browser policy)
 function createPlayOverlay() {
@@ -339,11 +352,26 @@ function createPlayOverlay() {
     if (overlay) return;
     overlay = document.createElement('div');
     overlay.id = 'playOverlay';
-    overlay.className = 'position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-dark bg-opacity-75 z-3';
-    overlay.innerHTML = '<button class="btn btn-primary btn-lg rounded-pill"><i class="fa-solid fa-play me-2"></i> Tap to Watch Live</button>';
-    overlay.onclick = () => {
-        videoElem.play();
-        overlay.remove();
+    overlay.className = 'position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center bg-dark bg-opacity-75 z-3';
+    overlay.innerHTML = `
+        <div class="spinner-border text-light mb-3" role="status" style="width: 3rem; height: 3rem; display: none;" id="playSpinner"></div>
+        <button class="btn btn-primary btn-lg rounded-pill px-4 py-3" id="playBtnTrigger">
+            <i class="fa-solid fa-play me-2"></i> Tap to Watch Live
+        </button>
+    `;
+    
+    // Some devices require explicit interaction to play
+    overlay.querySelector('#playBtnTrigger').onclick = () => {
+        document.getElementById('playSpinner').style.display = 'block';
+        document.getElementById('playBtnTrigger').style.display = 'none';
+        
+        videoElem.play().then(() => {
+            overlay.remove();
+        }).catch(err => {
+            console.log("Play failed:", err);
+            overlay.remove();
+            alert("Could not play video automatically. Please check your browser permissions.");
+        });
     };
     videoElem.parentElement.appendChild(overlay);
 }
