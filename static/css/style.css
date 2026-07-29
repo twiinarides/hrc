@@ -10,19 +10,29 @@
   --gray-border: #E0E0E0;
 }
 
-/* Global Reset & Responsiveness for All Gadgets */
+/* ── Global Reset: Kill all horizontal overflow ────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 html, body {
   font-family: 'Inter', sans-serif;
   color: var(--dark-charcoal);
   background-color: var(--white);
-  overflow-x: hidden;
-  max-width: 100%;
+  overflow-x: clip;
   width: 100%;
+  max-width: 100vw;
   margin: 0;
   padding: 0;
 }
 
-img, video, iframe, embed, object {
+/* Every row and container must never escape viewport */
+.container, .container-fluid, .row, section, main, footer, nav, header {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img, video, iframe, embed, object, canvas, svg {
   max-width: 100%;
   height: auto;
   object-fit: cover;
@@ -32,6 +42,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Playfair Display', serif;
   font-weight: 700;
   word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .text-purple { color: var(--purple-primary) !important; }
@@ -74,30 +85,108 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* Mobile Navbar Expansion Rules */
+/* ── Mobile Navbar ─────────────────────────────────────────────────────── */
 @media (max-width: 991.98px) {
-  .navbar-collapse {
+  .navbar-brand span.fs-5 {
+    font-size: 1rem !important;
+  }
+  /* Style the open collapse panel — do NOT override display or visibility */
+  .navbar-collapse.show {
     background-color: #ffffff;
     padding: 15px;
-    border-radius: 10px;
-    margin-top: 10px;
+    border-radius: 0 0 10px 10px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     border: 1px solid var(--gray-border);
+    border-top: none;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  .navbar-nav {
+    align-items: flex-start !important;
   }
   .navbar-nav .nav-link {
-    padding: 8px 12px !important;
+    padding: 10px 12px !important;
     border-bottom: 1px solid #f0f0f0;
+    width: 100%;
+    display: block;
   }
   .navbar-nav .nav-item:last-child .nav-link {
     border-bottom: none;
   }
+  .navbar-nav .btn {
+    width: 100%;
+    text-align: center;
+    margin-top: 6px;
+  }
 }
 
+/* ── Hero Banner ───────────────────────────────────────────────────────── */
 .hero-banner {
   background: linear-gradient(rgba(107, 45, 139, 0.85), rgba(196, 18, 48, 0.85)), url('/static/images/logo.png') center/cover no-repeat;
   color: white;
-  padding: 120px 0;
+  padding: 80px 16px;
   text-align: center;
+  width: 100%;
+}
+
+@media (min-width: 992px) {
+  .hero-banner {
+    padding: 120px 0;
+  }
+}
+
+/* Hero heading must scale down on small phones */
+@media (max-width: 575.98px) {
+  .display-3 {
+    font-size: 1.75rem !important;
+  }
+  .display-4 {
+    font-size: 1.5rem !important;
+  }
+  .display-5 {
+    font-size: 1.35rem !important;
+  }
+  .display-6 {
+    font-size: 1.2rem !important;
+  }
+  .lead {
+    font-size: 0.95rem !important;
+  }
+  .fs-4 {
+    font-size: 1rem !important;
+  }
+  /* Hero buttons stack vertically on phones */
+  .hero-banner .d-flex.gap-3 {
+    flex-direction: column !important;
+    gap: 10px !important;
+    align-items: center;
+  }
+  .hero-banner .btn-lg {
+    width: 100%;
+    max-width: 280px;
+    font-size: 0.95rem;
+    padding: 10px 20px;
+  }
+  /* Container padding on phones */
+  .container {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  /* Stats counter grid: 2 columns on phone */
+  .bg-light-purple .col-md-3 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+}
+
+/* Medium tablets */
+@media (min-width: 576px) and (max-width: 991.98px) {
+  .display-3 {
+    font-size: 2.2rem !important;
+  }
+  .hero-banner {
+    padding: 80px 24px;
+  }
 }
 
 .card-custom {
@@ -129,4 +218,10 @@ footer {
   background-color: var(--dark-charcoal);
   color: white;
   padding: 50px 0 20px;
+}
+
+/* ── Alert messages must not overflow ──────────────────────────────────── */
+.alert {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
