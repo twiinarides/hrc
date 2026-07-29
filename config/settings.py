@@ -128,11 +128,6 @@ ADMIN_NOTIFICATION_EMAILS = [
 # Redirect URI to add: https://hopereceptioncenter.org/accounts/google/login/callback/
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
-        'APP': {
-            'client_id': os.environ.get('GOOGLE_CLIENT_ID', ''),
-            'secret': os.environ.get('GOOGLE_CLIENT_SECRET', ''),
-            'key': ''
-        },
         'SCOPE': [
             'profile',
             'email',
