@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+import json
 
 class NewsArticle(models.Model):
     title = models.CharField(max_length=250)
@@ -104,3 +105,32 @@ class AlbumPhoto(models.Model):
         ordering = ['order', 'uploaded_at']
         verbose_name = 'Album Photo'
         verbose_name_plural = 'Album Photos'
+
+
+# ─── WebRTC Live Stream Signaling ────────────────────────────────────────────
+
+class LiveStreamSignal(models.Model):
+    """Stores WebRTC signaling data so admin can broadcast to viewers."""
+    video = models.OneToOneField(Video, on_delete=models.CASCADE, related_name='stream_signal')
+    # Admin (broadcaster) SDP offer
+    offer_sdp = models.TextField(blank=True, null=True)
+    is_broadcasting = models.BooleanField(default=False)
+    started_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Signal for {self.video.title}"
+
+
+class ViewerConnection(models.Model):
+    """Each viewer's WebRTC answer + ICE candidates for peer connection with admin."""
+    signal = models.ForeignKey(LiveStreamSignal, on_delete=models.CASCADE, related_name='viewers')
+    viewer_token = models.CharField(max_length=64)  # random token per viewer tab
+    answer_sdp = models.TextField(blank=True, null=True)
+    # ICE candidates stored as JSON arrays
+    broadcaster_ice = models.TextField(default='[]')  # admin -> viewer
+    viewer_ice = models.TextField(default='[]')       # viewer -> admin
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Viewer {self.viewer_token[:8]} on {self.signal.video.title}"

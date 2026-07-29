@@ -54,6 +54,16 @@ urlpatterns = [
     path('stories/', media_views.stories_list, name='stories_list'),
     path('stories/share/', media_views.submit_story, name='submit_story'),
 
+    # WebRTC Live Stream Signaling (no external service needed)
+    path('videos/<slug:slug>/rtc/offer/', media_views.rtc_broadcaster_offer, name='rtc_broadcaster_offer'),
+    path('videos/<slug:slug>/rtc/offer-poll/', media_views.rtc_poll_offer, name='rtc_poll_offer'),
+    path('videos/<slug:slug>/rtc/broadcaster-ice/', media_views.rtc_broadcaster_ice, name='rtc_broadcaster_ice'),
+    path('videos/<slug:slug>/rtc/stop/', media_views.rtc_broadcaster_stop, name='rtc_broadcaster_stop'),
+    path('videos/<slug:slug>/rtc/join/', media_views.rtc_viewer_join, name='rtc_viewer_join'),
+    path('videos/<slug:slug>/rtc/answer/', media_views.rtc_viewer_answer, name='rtc_viewer_answer'),
+    path('videos/<slug:slug>/rtc/viewer-ice/', media_views.rtc_viewer_ice, name='rtc_viewer_ice'),
+    path('videos/<slug:slug>/rtc/poll-viewers/', media_views.rtc_broadcaster_poll_viewers, name='rtc_broadcaster_poll_viewers'),
+
     # Photo Gallery / Albums
     path('gallery/', media_views.album_list, name='album_list'),
     path('gallery/<slug:slug>/', media_views.album_detail, name='album_detail'),

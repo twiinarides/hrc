@@ -144,101 +144,165 @@
 </div>
 
 <script>
-// ── Live Broadcast Admin Controls ──────────────────────────────────────────
-let localStream = null;
-let currentFacingMode = 'environment'; // Start with back camera
+// ── WebRTC Live Streaming Logic ─────────────────────────────────────────────
+const slug = '{{ video.slug }}';
+const isAdmin = {% if user.is_staff %}true{% else %}false{% endif %};
+const videoElem = document.getElementById('liveWebcamVideo');
+const waitingScreen = document.getElementById('waitingScreen');
 
-function startAdminBroadcasting() {
+let localStream = null;
+let currentFacingMode = 'environment';
+let peerConnections = {}; // For admin: map of viewer_token -> RTCPeerConnection
+let viewerPc = null;      // For viewer: single RTCPeerConnection to admin
+
+// STUN servers to get public IP for WebRTC connection
+const rtcConfig = {
+    iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+    ]
+};
+
+// ── Admin (Broadcaster) Functions ──────────────────────────────────────────
+
+async function startAdminBroadcasting() {
     const constraints = {
-        video: {
-            facingMode: currentFacingMode,  // 'environment' = back, 'user' = front
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-        },
+        video: { facingMode: currentFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: true
     };
 
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia(constraints)
-            .then(function(stream) {
-                localStream = stream;
-                const videoElem = document.getElementById('liveWebcamVideo');
-                const waitingScreen = document.getElementById('waitingScreen');
+    try {
+        localStream = await navigator.mediaDevices.getUserMedia(constraints);
+        setupLocalVideo();
+        
+        // Start signaling loop for viewers
+        setInterval(pollForViewers, 3000);
 
-                if (videoElem) {
-                    videoElem.srcObject = stream;
-                    videoElem.muted = true; // Mute own audio locally to avoid feedback
-                    videoElem.play().catch(e => console.log('Play error:', e));
-                    // Show video, hide waiting screen
-                    videoElem.classList.remove('d-none');
-                    if (waitingScreen) waitingScreen.classList.add('d-none');
-                }
+    } catch (err) {
+        // Fallback if 'environment' camera fails
+        if (err.name === 'OverconstrainedError' || err.name === 'NotFoundError') {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                setupLocalVideo();
+                setInterval(pollForViewers, 3000);
+            } catch (e2) {
+                alert('Could not access any camera: ' + e2.message);
+            }
+        } else {
+            alert('Camera error: ' + err.message);
+        }
+    }
+}
 
-                document.getElementById('startCamBtn').classList.add('d-none');
-                document.getElementById('flipCamBtn').classList.remove('d-none');
-                document.getElementById('stopCamBtn').classList.remove('d-none');
+async function setupLocalVideo() {
+    videoElem.srcObject = localStream;
+    videoElem.muted = true; // Mute locally to avoid feedback
+    videoElem.play().catch(e => console.log(e));
+    videoElem.classList.remove('d-none');
+    if (waitingScreen) waitingScreen.classList.add('d-none');
 
-                const badge = document.getElementById('camStatusBadge');
-                if (badge) {
-                    badge.textContent = currentFacingMode === 'environment' ? '🎥 Back Camera Live' : '🤳 Front Camera Live';
-                    badge.className = 'badge bg-danger ms-1';
-                }
-            })
-            .catch(function(err) {
-                // If back camera fails (some devices), fall back to any camera
-                if (err.name === 'OverconstrainedError' || err.name === 'NotFoundError') {
-                    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-                        .then(function(stream) {
-                            localStream = stream;
-                            const videoElem = document.getElementById('liveWebcamVideo');
-                            if (videoElem) {
-                                videoElem.srcObject = stream;
-                                videoElem.play().catch(e => {});
-                                videoElem.classList.remove('d-none');
-                                const ws = document.getElementById('waitingScreen');
-                                if (ws) ws.classList.add('d-none');
-                            }
-                            document.getElementById('startCamBtn').classList.add('d-none');
-                            document.getElementById('flipCamBtn').classList.remove('d-none');
-                            document.getElementById('stopCamBtn').classList.remove('d-none');
-                        })
-                        .catch(function(e2) {
-                            alert('Could not access any camera: ' + e2.message);
+    document.getElementById('startCamBtn').classList.add('d-none');
+    document.getElementById('flipCamBtn').classList.remove('d-none');
+    document.getElementById('stopCamBtn').classList.remove('d-none');
+
+    const badge = document.getElementById('camStatusBadge');
+    if (badge) {
+        badge.textContent = currentFacingMode === 'environment' ? '🎥 Back Camera Live' : '🤳 Front Camera Live';
+        badge.className = 'badge bg-danger ms-1';
+    }
+
+    // Initialize broadcast signaling
+    await notifyBroadcastStart();
+}
+
+async function notifyBroadcastStart() {
+    // Create a dummy connection just to generate an offer
+    const tempPc = new RTCPeerConnection(rtcConfig);
+    localStream.getTracks().forEach(track => tempPc.addTrack(track, localStream));
+    
+    const offer = await tempPc.createOffer();
+    await tempPc.setLocalDescription(offer);
+
+    // Send offer to server
+    await fetch(`/videos/${slug}/rtc/offer/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ offer: tempPc.localDescription })
+    });
+}
+
+async function pollForViewers() {
+    if (!localStream) return;
+
+    try {
+        const res = await fetch(`/videos/${slug}/rtc/poll-viewers/`);
+        const data = await res.json();
+        
+        for (const viewer of data.viewers) {
+            const token = viewer.viewer_token;
+            if (!peerConnections[token]) {
+                // New viewer! Create a peer connection for them
+                const pc = new RTCPeerConnection(rtcConfig);
+                peerConnections[token] = pc;
+
+                // Send our ICE candidates to the viewer
+                pc.onicecandidate = e => {
+                    if (e.candidate) {
+                        fetch(`/videos/${slug}/rtc/broadcaster-ice/`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ viewer_token: token, candidate: e.candidate })
                         });
-                } else {
-                    alert('Could not access camera/microphone: ' + err.message + '\n\nMake sure you have allowed camera permissions in your browser.');
+                    }
+                };
+
+                // Add our camera tracks
+                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+                // Generate new offer for this specific viewer connection
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                
+                // Handle their answer
+                if (viewer.answer) {
+                    await pc.setRemoteDescription(new RTCSessionDescription(viewer.answer));
                 }
-            });
-    } else {
-        alert('Camera access is not supported on this browser. Please use Chrome or Firefox.');
+            }
+
+            // Process their ICE candidates
+            if (viewer.ice_candidates && peerConnections[token]) {
+                for (const candidate of viewer.ice_candidates) {
+                    try {
+                        await peerConnections[token].addIceCandidate(new RTCIceCandidate(candidate));
+                    } catch (e) {
+                        // Ignore dupes
+                    }
+                }
+            }
+        }
+        
+        // Update viewer count badge
+        const countBadge = document.getElementById('viewerCount');
+        if (countBadge) countBadge.textContent = `${data.viewers.length} viewers tuned in`;
+
+    } catch (e) {
+        console.log('Polling error:', e);
     }
 }
 
 function flipCamera() {
-    // Toggle between back and front camera
     currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
-
-    // Stop current stream tracks
-    if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-        localStream = null;
-    }
-
-    // Restart with the new facing mode
-    startAdminBroadcasting();
+    stopAdminBroadcasting(false); // don't notify server, just restart stream
+    setTimeout(startAdminBroadcasting, 500);
 }
 
-function stopAdminBroadcasting() {
+async function stopAdminBroadcasting(notifyServer = true) {
     if (localStream) {
         localStream.getTracks().forEach(track => track.stop());
         localStream = null;
     }
-    const videoElem = document.getElementById('liveWebcamVideo');
-    if (videoElem) {
-        videoElem.srcObject = null;
-        videoElem.classList.add('d-none');
-    }
-    const waitingScreen = document.getElementById('waitingScreen');
+    videoElem.srcObject = null;
+    videoElem.classList.add('d-none');
     if (waitingScreen) waitingScreen.classList.remove('d-none');
 
     document.getElementById('startCamBtn').classList.remove('d-none');
@@ -250,6 +314,90 @@ function stopAdminBroadcasting() {
         badge.textContent = 'Camera Off';
         badge.className = 'badge bg-secondary ms-1';
     }
+    
+    // Close all peer connections
+    Object.values(peerConnections).forEach(pc => pc.close());
+    peerConnections = {};
+
+    if (notifyServer) {
+        await fetch(`/videos/${slug}/rtc/stop/`, { method: 'POST' });
+    }
+}
+
+
+// ── Viewer Functions ──────────────────────────────────────────────────────
+
+let viewerToken = localStorage.getItem('hrc_viewer_token');
+if (!viewerToken) {
+    viewerToken = Math.random().toString(36).substring(2, 15);
+    localStorage.setItem('hrc_viewer_token', viewerToken);
+}
+
+async function checkStreamStatus() {
+    if (isAdmin) return; // Admins broadcast, they don't consume their own stream via WebRTC
+
+    try {
+        const res = await fetch(`/videos/${slug}/rtc/offer-poll/`);
+        const data = await res.json();
+
+        if (data.broadcasting && data.offer && !viewerPc) {
+            // Stream is live and we don't have a connection yet! Join it.
+            await joinLiveStream(data.offer);
+        } else if (!data.broadcasting && viewerPc) {
+            // Stream stopped
+            viewerPc.close();
+            viewerPc = null;
+            videoElem.srcObject = null;
+            videoElem.classList.add('d-none');
+            if (waitingScreen) waitingScreen.classList.remove('d-none');
+        }
+    } catch (e) {
+        console.log(e);
+    }
+}
+
+async function joinLiveStream(offer) {
+    viewerPc = new RTCPeerConnection(rtcConfig);
+
+    // When admin sends ICE candidates, send them to our server
+    viewerPc.onicecandidate = e => {
+        if (e.candidate) {
+            fetch(`/videos/${slug}/rtc/viewer-ice/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ viewer_token: viewerToken, candidate: e.candidate })
+            });
+        }
+    };
+
+    // When we get the video stream, show it!
+    viewerPc.ontrack = e => {
+        videoElem.srcObject = e.streams[0];
+        videoElem.muted = false; // Viewers hear audio
+        videoElem.play().catch(err => console.log('Autoplay blocked:', err));
+        videoElem.classList.remove('d-none');
+        if (waitingScreen) waitingScreen.classList.add('d-none');
+    };
+
+    // Set remote offer
+    await viewerPc.setRemoteDescription(new RTCSessionDescription(offer));
+
+    // Create answer
+    const answer = await viewerPc.createAnswer();
+    await viewerPc.setLocalDescription(answer);
+
+    // Send answer and token to server
+    await fetch(`/videos/${slug}/rtc/answer/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ viewer_token: viewerToken, answer: viewerPc.localDescription })
+    });
+}
+
+// Start viewer polling every 5 seconds if not admin
+if (!isAdmin) {
+    checkStreamStatus();
+    setInterval(checkStreamStatus, 5000);
 }
 </script>
 
