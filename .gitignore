@@ -23,3 +23,8 @@ db.sqlite3
 .vscode/
 .idea/
 *.log
+
+# Secret & Data Files
+client_secret*.json
+*.json
+!static/manifest.json
