@@ -78,7 +78,7 @@
 
                     {% if user.is_authenticated %}
                         <!-- Admin Notification Bell Icon for Staff/Admins -->
-                        {% if user.is_staff or user.role != 'client' %}
+                        {% if user.is_staff %}
                         <li class="nav-item dropdown ms-lg-2">
                             <a class="nav-link position-relative text-purple" href="#" role="button" data-bs-toggle="dropdown">
                                 <i class="fa-solid fa-bell fs-5"></i>
@@ -121,7 +121,7 @@
                                 <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="fa-solid fa-user-gear me-2"></i>My Account</a></li>
                                 <li><a class="dropdown-item" href="{% url 'my_applications' %}"><i class="fa-solid fa-hands-holding-child me-2"></i>My Applications</a></li>
                                 <li><a class="dropdown-item" href="{% url 'my_sessions' %}"><i class="fa-solid fa-calendar-check me-2"></i>My Sessions</a></li>
-                                {% if user.is_staff or user.role != 'client' %}
+                                {% if user.is_staff %}
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item fw-bold text-purple" href="{% url 'admin_stats_dashboard' %}"><i class="fa-solid fa-gauge-high me-2 text-red"></i>Admin Dashboard</a></li>
                                     <li><a class="dropdown-item text-purple" href="/admin/"><i class="fa-solid fa-screwdriver-wrench me-2"></i>Django Admin Console</a></li>

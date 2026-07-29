@@ -31,24 +31,42 @@
             <!-- Video / Live Broadcast Container -->
             <div class="rounded-4 overflow-hidden shadow-lg mb-4 bg-black position-relative">
                 {% if video.is_live and not video.youtube_url and not video.video_file %}
-                
-                <div id="liveCameraContainer" class="ratio ratio-16x9 bg-dark d-flex align-items-center justify-content-center">
-                    <video id="liveWebcamVideo" autoplay playsinline controls class="w-100 h-100"></video>
+
+                <!-- Live camera feed element (used by admin broadcaster) -->
+                <div id="liveCameraContainer" class="ratio ratio-16x9 bg-dark position-relative">
+                    <!-- Waiting screen shown to watchers before admin starts -->
+                    <div id="waitingScreen" class="d-flex flex-column align-items-center justify-content-center w-100 h-100 text-white">
+                        <i class="fa-solid fa-tower-broadcast fs-1 mb-3 pulse-animation text-danger"></i>
+                        <h5 class="fw-bold mb-1">Live Session in Progress</h5>
+                        <p class="text-white-50 small mb-0">Waiting for the broadcaster to go live...</p>
+                        <div class="mt-3 d-flex align-items-center gap-2">
+                            <span class="badge bg-danger"><i class="fa-solid fa-circle me-1" style="font-size:8px;"></i> LIVE</span>
+                            <small class="text-white-50" id="viewerCount">You are tuned in</small>
+                        </div>
+                    </div>
+                    <!-- The actual video element — hidden until stream starts -->
+                    <video id="liveWebcamVideo" autoplay playsinline muted class="w-100 h-100 d-none" style="object-fit:cover;"></video>
                 </div>
 
-                {% if user.is_authenticated and user.is_staff or user.role != 'client' %}
-                <!-- Admin Only Live Broadcast Controls -->
-                <div class="p-3 bg-dark text-white text-center border-top d-flex justify-content-center align-items-center gap-2 flex-wrap">
-                    <span class="badge bg-red me-2"><i class="fa-solid fa-shield-halved me-1"></i> Admin Host Controls</span>
-                    <button id="startCamBtn" onclick="startAdminBroadcasting()" class="btn btn-danger btn-sm">
-                        <i class="fa-solid fa-video me-1"></i> Start Camera Broadcast
-                    </button>
-                    <button id="stopCamBtn" onclick="stopAdminBroadcasting()" class="btn btn-secondary btn-sm d-none">
-                        <i class="fa-solid fa-video-slash me-1"></i> Stop Camera
-                    </button>
+                {% if user.is_staff %}
+                <!-- ── Admin Only Live Broadcast Controls ── -->
+                <div class="p-3 bg-dark text-white border-top">
+                    <div class="d-flex justify-content-center align-items-center gap-2 flex-wrap">
+                        <span class="badge bg-danger me-2"><i class="fa-solid fa-shield-halved me-1"></i> Admin Host Controls</span>
+                        <button id="startCamBtn" onclick="startAdminBroadcasting()" class="btn btn-danger btn-sm">
+                            <i class="fa-solid fa-video me-1"></i> Start Camera Broadcast
+                        </button>
+                        <button id="flipCamBtn" onclick="flipCamera()" class="btn btn-warning btn-sm d-none">
+                            <i class="fa-solid fa-rotate me-1"></i> Flip Camera
+                        </button>
+                        <button id="stopCamBtn" onclick="stopAdminBroadcasting()" class="btn btn-secondary btn-sm d-none">
+                            <i class="fa-solid fa-video-slash me-1"></i> Stop Camera
+                        </button>
+                        <span id="camStatusBadge" class="badge bg-secondary ms-1">Camera Off</span>
+                    </div>
                 </div>
                 {% else %}
-                <!-- Visitor Watcher Banner -->
+                <!-- ── Visitor Watcher Banner ── -->
                 <div class="p-3 bg-purple text-white text-center border-top">
                     <i class="fa-solid fa-eye me-2"></i> <strong>Watcher Mode:</strong> You are tuned in to Hope Reception Centre's Live Session.
                 </div>
@@ -126,27 +144,88 @@
 </div>
 
 <script>
+// ── Live Broadcast Admin Controls ──────────────────────────────────────────
 let localStream = null;
+let currentFacingMode = 'environment'; // Start with back camera
 
 function startAdminBroadcasting() {
+    const constraints = {
+        video: {
+            facingMode: currentFacingMode,  // 'environment' = back, 'user' = front
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+        },
+        audio: true
+    };
+
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        navigator.mediaDevices.getUserMedia(constraints)
             .then(function(stream) {
                 localStream = stream;
                 const videoElem = document.getElementById('liveWebcamVideo');
+                const waitingScreen = document.getElementById('waitingScreen');
+
                 if (videoElem) {
                     videoElem.srcObject = stream;
-                    videoElem.play();
-                    document.getElementById('startCamBtn').classList.add('d-none');
-                    document.getElementById('stopCamBtn').classList.remove('d-none');
+                    videoElem.muted = true; // Mute own audio locally to avoid feedback
+                    videoElem.play().catch(e => console.log('Play error:', e));
+                    // Show video, hide waiting screen
+                    videoElem.classList.remove('d-none');
+                    if (waitingScreen) waitingScreen.classList.add('d-none');
+                }
+
+                document.getElementById('startCamBtn').classList.add('d-none');
+                document.getElementById('flipCamBtn').classList.remove('d-none');
+                document.getElementById('stopCamBtn').classList.remove('d-none');
+
+                const badge = document.getElementById('camStatusBadge');
+                if (badge) {
+                    badge.textContent = currentFacingMode === 'environment' ? '🎥 Back Camera Live' : '🤳 Front Camera Live';
+                    badge.className = 'badge bg-danger ms-1';
                 }
             })
             .catch(function(err) {
-                alert('Could not access camera/microphone: ' + err.message);
+                // If back camera fails (some devices), fall back to any camera
+                if (err.name === 'OverconstrainedError' || err.name === 'NotFoundError') {
+                    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                        .then(function(stream) {
+                            localStream = stream;
+                            const videoElem = document.getElementById('liveWebcamVideo');
+                            if (videoElem) {
+                                videoElem.srcObject = stream;
+                                videoElem.play().catch(e => {});
+                                videoElem.classList.remove('d-none');
+                                const ws = document.getElementById('waitingScreen');
+                                if (ws) ws.classList.add('d-none');
+                            }
+                            document.getElementById('startCamBtn').classList.add('d-none');
+                            document.getElementById('flipCamBtn').classList.remove('d-none');
+                            document.getElementById('stopCamBtn').classList.remove('d-none');
+                        })
+                        .catch(function(e2) {
+                            alert('Could not access any camera: ' + e2.message);
+                        });
+                } else {
+                    alert('Could not access camera/microphone: ' + err.message + '\n\nMake sure you have allowed camera permissions in your browser.');
+                }
             });
     } else {
-        alert('Camera access is not supported on this device/browser.');
+        alert('Camera access is not supported on this browser. Please use Chrome or Firefox.');
     }
+}
+
+function flipCamera() {
+    // Toggle between back and front camera
+    currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
+
+    // Stop current stream tracks
+    if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+    }
+
+    // Restart with the new facing mode
+    startAdminBroadcasting();
 }
 
 function stopAdminBroadcasting() {
@@ -155,9 +234,22 @@ function stopAdminBroadcasting() {
         localStream = null;
     }
     const videoElem = document.getElementById('liveWebcamVideo');
-    if (videoElem) videoElem.srcObject = null;
+    if (videoElem) {
+        videoElem.srcObject = null;
+        videoElem.classList.add('d-none');
+    }
+    const waitingScreen = document.getElementById('waitingScreen');
+    if (waitingScreen) waitingScreen.classList.remove('d-none');
+
     document.getElementById('startCamBtn').classList.remove('d-none');
+    document.getElementById('flipCamBtn').classList.add('d-none');
     document.getElementById('stopCamBtn').classList.add('d-none');
+
+    const badge = document.getElementById('camStatusBadge');
+    if (badge) {
+        badge.textContent = 'Camera Off';
+        badge.className = 'badge bg-secondary ms-1';
+    }
 }
 </script>
 
