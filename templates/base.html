@@ -70,11 +70,9 @@
                 </div>
             </a>
 
-            <div class="d-flex align-items-center gap-2 ms-auto d-lg-none">
-                <button class="navbar-toggler border-0 p-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-            </div>
+            <button class="navbar-toggler border-0 p-2 shadow-none ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation" id="mobileNavbarToggler">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
@@ -235,6 +233,16 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/bootstrap.bundle.min.js"></script>
 
     <script>
+    // Mobile Navigation Toggler Fallback
+    const mobileToggler = document.getElementById('mobileNavbarToggler');
+    const mobileNavMenu = document.getElementById('navbarNav');
+    if (mobileToggler && mobileNavMenu) {
+        mobileToggler.addEventListener('click', function(e) {
+            e.stopPropagation();
+            mobileNavMenu.classList.toggle('show');
+        });
+    }
+
     // ─── Persistent PWA Install Prompt (Shows once, never repeats after install/dismiss) ───
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {

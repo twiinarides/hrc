@@ -71,9 +71,15 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     border: 1px solid var(--gray-border);
   }
+  .navbar-collapse.show {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
   .navbar-nav .nav-link {
     padding: 10px 14px !important;
     border-bottom: 1px solid #f0f0f0;
+    color: var(--purple-primary) !important;
   }
   .navbar-nav .nav-item:last-child .nav-link {
     border-bottom: none;
