@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ program.title }} — {{ site.site_name }}{% endblock %}
+
+{% block og_tags %}
+<meta property="og:title" content="{{ program.title }} — Hope Reception Centre">
+<meta property="og:description" content="{{ program.summary }}">
+{% if program.image %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ program.image.url }}">{% endif %}
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:type" content="website">
+{% endblock %}
+
+{% block content %}
+
+<!-- Program Hero Banner -->
+<div class="py-5" style="background: linear-gradient(135deg, #6B2D8B 0%, #3d1455 100%); position:relative; overflow:hidden;">
+    <div class="container text-white text-center position-relative" style="z-index:2;">
+        <a href="{% url 'program_list' %}" class="text-white-50 small mb-3 d-inline-block"><i class="fa-solid fa-arrow-left me-1"></i> All Programs</a>
+        <div class="mb-3">
+            <div class="rounded-circle bg-white d-inline-flex align-items-center justify-content-center shadow-lg" style="width:80px;height:80px;">
+                <i class="fa-solid {{ program.icon }} fs-1 text-purple"></i>
+            </div>
+        </div>
+        <h1 class="display-4 fw-bold text-white mb-3">{{ program.title }}</h1>
+        <p class="lead text-white-75 mb-4" style="max-width:650px;margin:0 auto;">{{ program.summary }}</p>
+        {% if user.is_authenticated %}
+            <a href="{% url 'apply_program' program.slug %}" class="btn btn-red btn-lg px-5 shadow">
+                <i class="fa-solid fa-paper-plane me-2"></i>Apply for This Program
+            </a>
+        {% else %}
+            <a href="{% url 'login' %}?next={% url 'apply_program' program.slug %}" class="btn btn-light btn-lg px-5 text-purple fw-bold shadow">
+                <i class="fa-solid fa-user me-2"></i>Sign In to Apply
+            </a>
+        {% endif %}
+    </div>
+    <!-- Decorative circles -->
+    <div style="position:absolute;top:-60px;right:-60px;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,0.05);"></div>
+    <div style="position:absolute;bottom:-80px;left:-80px;width:250px;height:250px;border-radius:50%;background:rgba(255,255,255,0.04);"></div>
+</div>
+
+<!-- Program Content -->
+<div class="container py-5">
+    <div class="row g-5">
+
+        <!-- Main Content Column -->
+        <div class="col-lg-8">
+            {% if program.image %}
+            <img src="{{ program.image.url }}" class="img-fluid rounded-4 shadow mb-4 w-100" alt="{{ program.title }}" style="max-height:400px;object-fit:cover;">
+            {% endif %}
+
+            <!-- Program Description -->
+            <div class="card card-custom border-0 shadow-sm p-4 mb-4">
+                <h3 class="text-purple fw-bold mb-3"><i class="fa-solid fa-circle-info me-2 text-red"></i>Program Overview & Description</h3>
+                <div class="lh-lg text-dark fs-5">{{ program.description|linebreaks }}</div>
+            </div>
+
+            <!-- Program-Specific Information Sections -->
+            {% if program.slug == 'child-reception' or 'reception' in program.slug or 'child' in program.slug %}
+            <div class="card card-custom border-0 shadow-sm p-4 mb-4 bg-light-purple">
+                <h3 class="text-purple fw-bold mb-4"><i class="fa-solid fa-children me-2 text-red"></i>Child Reception & Protection — What We Do</h3>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="bg-white rounded-3 p-3 h-100">
+                            <i class="fa-solid fa-house-circle-check text-red fs-3 mb-2 d-block"></i>
+                            <strong class="text-purple">Emergency Intake & Reception</strong>
+                            <p class="small text-muted mt-1 mb-0">We receive children referred by Police, local authorities, hospitals, and community members. Every child is assessed within 24 hours of arrival by qualified social workers.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="bg-white rounded-3 p-3 h-100">
+                            <i class="fa-solid fa-shield-heart text-red fs-3 mb-2 d-block"></i>
+                            <strong class="text-purple">Immediate Safety & Shelter</strong>
+                            <p class="small text-muted mt-1 mb-0">Children are provided immediate safe shelter, food, clothing, and a secure environment away from harm, abuse, or neglect.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="bg-white rounded-3 p-3 h-100">
+                            <i class="fa-solid fa-stethoscope text-red fs-3 mb-2 d-block"></i>
+                            <strong class="text-purple">Health & Medical Support</strong>
+                            <p class="small text-muted mt-1 mb-0">Comprehensive medical check-ups, nutritional support, and psycho-social first aid are provided immediately upon reception.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="bg-white rounded-3 p-3 h-100">
+                            <i class="fa-solid fa-people-arrows text-red fs-3 mb-2 d-block"></i>
+                            <strong class="text-purple">Family Tracing & Reunification</strong>
+                            <p class="small text-muted mt-1 mb=0">Our social work team actively traces family members and works toward safe reunification or alternative placement in line with Uganda's Children Act.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card card-custom border-0 shadow-sm p-4 mb-4">
+                <h4 class="text-purple fw-bold mb-3"><i class="fa-solid fa-clipboard-list me-2 text-red"></i>Who Qualifies for Child Reception?</h4>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item border-0 ps-0"><i class="fa-solid fa-check-circle text-red me-2"></i>Abandoned, orphaned, or unaccompanied children</li>
+                    <li class="list-group-item border-0 ps-0"><i class="fa-solid fa-check-circle text-red me-2"></i>Children rescued from abuse, neglect, or exploitative situations</li>
+                    <li class="list-group-item border-0 ps-0"><i class="fa-solid fa-check-circle text-red me-2"></i>Children in conflict with the law requiring temporary care</li>
+                    <li class="list-group-item border-0 ps-0"><i class="fa-solid fa-check-circle text-red me-2"></i>Refugee children without guardians</li>
+                    <li class="list-group-item border-0 ps-0"><i class="fa-solid fa-check-circle text-red me-2"></i>Children referred by courts, police or MGLSD Uganda</li>
+                </ul>
+                <div class="alert alert-warning border-0 mt-3 small">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i><strong>Emergency Cases:</strong> For emergency child protection cases, contact us immediately at <strong>{{ site.phone }}</strong> or go to our offices at {{ site.address }}.
+                </div>
+            </div>
+            {% endif %}
+
+            {% if program.slug == 'counseling-services' or 'counsel' in program.slug %}
+            <div class="card card-custom border-0 shadow-sm p-4 mb-4 bg-light-purple">
+                <h3 class="text-purple fw-bold mb-4"><i class="fa-solid fa-brain me-2 text-red"></i>Counseling Services — What to Expect</h3>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="bg-white rounded-3 p-3 h-100">
+                            <i class="fa-solid fa-user-doctor text-red fs-3 mb-2 d-block"></i>
+                            <strong class="text-purple">Individual Counseling</strong>
+                            <p class="small text-muted mt-1 mb-0">One-on-one sessions with qualified counselors covering trauma healing, grief processing, behavioural challenges, and mental wellness.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="bg-white rounded-3 p-3 h-100">
+                            <i class="fa-solid fa-people-group text-red fs-3 mb-2 d-block"></i>
+                            <strong class="text-purple">Group Therapy Sessions</strong>
+                            <p class="small text-muted mt-1 mb-0">Facilitated peer support groups allowing children and youth to share experiences, build coping skills and social support networks.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="bg-white rounded-3 p-3 h-100">
+                            <i class="fa-solid fa-video text-red fs-3 mb-2 d-block"></i>
+                            <strong class="text-purple">Digital Online Sessions</strong>
+                            <p class="small text-muted mt-1 mb-0">Video and text-based counseling for clients who cannot attend in-person. Sessions are conducted via secure video call platforms.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="bg-white rounded-3 p-3 h-100">
+                            <i class="fa-solid fa-user-shield text-red fs-3 mb-2 d-block"></i>
+                            <strong class="text-purple">Anonymous Support</strong>
+                            <p class="small text-muted mt-1 mb-0">For those not ready to reveal identity, our anonymous text-based platform allows safe, confidential help-seeking without registration.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card card-custom border-0 shadow-sm p-4 mb-4">
+                <h4 class="text-purple fw-bold mb-3"><i class="fa-solid fa-lock me-2 text-red"></i>Privacy & Confidentiality</h4>
+                <p class="text-muted">All counseling sessions at Hope Reception Centre are strictly confidential. Your information and discussions are protected and will not be shared with any third party without your written consent, except in cases where your safety or another person's safety is at immediate risk.</p>
+                <div class="d-flex gap-3 flex-wrap mt-2">
+                    <a href="{% url 'book_session' %}" class="btn btn-purple"><i class="fa-solid fa-calendar-check me-1"></i> Book a Session</a>
+                    <a href="{% url 'anonymous_chat' %}" class="btn btn-outline-danger"><i class="fa-solid fa-user-shield me-1"></i> Anonymous Support</a>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if program.slug == 'education-support' or 'educat' in program.slug or 'vocation' in program.slug %}
+            <div class="card card-custom border-0 shadow-sm p-4 mb-4 bg-light-purple">
+                <h3 class="text-purple fw-bold mb-4"><i class="fa-solid fa-graduation-cap me-2 text-red"></i>Education & Vocational Support — What We Offer</h3>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="bg-white rounded-3 p-3 h-100">
+                            <i class="fa-solid fa-school text-red fs-3 mb-2 d-block"></i>
+                            <strong class="text-purple">School Fees Assistance</strong>
+                            <p class="small text-muted mt-1 mb-0">We pay primary and secondary school fees for children under our care who cannot afford education. This includes government and private schools in Kabale district.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="bg-white rounded-3 p-3 h-100">
+                            <i class="fa-solid fa-book-open text-red fs-3 mb-2 d-block"></i>
+                            <strong class="text-purple">Learning Materials</strong>
+                            <p class="small text-muted mt-1 mb-0">School uniforms, books, stationery, and all necessary school materials are provided to enrolled children who cannot afford them.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="bg-white rounded-3 p-3 h-100">
+                            <i class="fa-solid fa-hammer text-red fs-3 mb-2 d-block"></i>
+                            <strong class="text-purple">Vocational Skills Training</strong>
+                            <p class="small text-muted mt-1 mb-0">Youth who have aged out of primary school receive practical vocational training in carpentry, tailoring, hairdressing, and entrepreneurship to enable self-reliance.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="bg-white rounded-3 p-3 h-100">
+                            <i class="fa-solid fa-chalkboard-teacher text-red fs-3 mb-2 d-block"></i>
+                            <strong class="text-purple">After-School Tutoring</strong>
+                            <p class="small text-muted mt-1 mb-0">Our staff and volunteers provide extra tutoring support to help children catch up on missed schoolwork, especially new intakes who have been out of school.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card card-custom border-0 shadow-sm p-4 mb-4">
+                <h4 class="text-purple fw-bold mb-3"><i class="fa-solid fa-list-check me-2 text-red"></i>Eligibility for Education Support</h4>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item border-0 ps-0"><i class="fa-solid fa-check-circle text-red me-2"></i>Children residing at Hope Reception Centre</li>
+                    <li class="list-group-item border-0 ps-0"><i class="fa-solid fa-check-circle text-red me-2"></i>Vulnerable children from the wider Kabale community on case-by-case basis</li>
+                    <li class="list-group-item border-0 ps-0"><i class="fa-solid fa-check-circle text-red me-2"></i>Youth aged 14–24 for vocational training programs</li>
+                    <li class="list-group-item border-0 ps-0"><i class="fa-solid fa-check-circle text-red me-2"></i>Children from families below the poverty line referred by local leaders</li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Apply CTA Card -->
+            <div class="card border-0 shadow p-4 mb-4 rounded-4" style="background:linear-gradient(135deg,#6B2D8B,#C41230);">
+                <h4 class="text-white fw-bold mb-2"><i class="fa-solid fa-rocket me-2"></i>Ready to Apply?</h4>
+                <p class="text-white-75 small mb-3">Submit your application and our team will review it and contact you via phone within 1-3 working days.</p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'apply_program' program.slug %}" class="btn btn-light text-purple fw-bold w-100">
+                        <i class="fa-solid fa-paper-plane me-1"></i> Apply Now
+                    </a>
+                {% else %}
+                    <a href="{% url 'login' %}?next={% url 'apply_program' program.slug %}" class="btn btn-light text-purple fw-bold w-100 mb-2">
+                        <i class="fa-solid fa-arrow-right-to-bracket me-1"></i> Sign In to Apply
+                    </a>
+                    <a href="{% url 'register' %}" class="btn btn-outline-light text-white w-100 small">No account? Register Free</a>
+                {% endif %}
+            </div>
+
+            <!-- Quick Info -->
+            <div class="card card-custom border-0 shadow-sm p-4 mb-4">
+                <h5 class="text-purple fw-bold mb-3"><i class="fa-solid fa-circle-info me-2 text-red"></i>Quick Information</h5>
+                <ul class="list-unstyled small">
+                    <li class="mb-2"><i class="fa-solid fa-location-dot text-red me-2"></i><strong>Location:</strong> {{ site.address }}</li>
+                    <li class="mb-2"><i class="fa-solid fa-phone text-red me-2"></i><strong>Phone:</strong> {{ site.phone }}</li>
+                    <li class="mb-2"><i class="fa-solid fa-envelope text-red me-2"></i><strong>Email:</strong> {{ site.email }}</li>
+                    <li class="mb-2"><i class="fa-solid fa-clock text-red me-2"></i><strong>Hours:</strong> Mon–Sat, 8:00am – 5:00pm EAT</li>
+                </ul>
+            </div>
+
+            <!-- Emergency Info -->
+            <div class="card card-custom border-0 shadow-sm p-3 bg-light-purple">
+                <h6 class="text-purple fw-bold mb-2"><i class="fa-solid fa-triangle-exclamation text-red me-1"></i>Need Immediate Help?</h6>
+                <p class="small text-muted mb-2">For emergencies or anonymous support, no account is needed.</p>
+                <a href="{% url 'anonymous_chat' %}" class="btn btn-red btn-sm w-100">
+                    <i class="fa-solid fa-user-shield me-1"></i> Anonymous Support
+                </a>
+            </div>
+
+            <!-- Other Programs -->
+            {% if related_programs %}
+            <div class="card card-custom border-0 shadow-sm p-4 mt-4">
+                <h5 class="text-purple fw-bold mb-3">Other Programs</h5>
+                {% for p in related_programs %}
+                <a href="{% url 'program_detail' p.slug %}" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+                    <div class="rounded-circle bg-light-purple d-flex align-items-center justify-content-center" style="width:38px;height:38px;flex-shrink:0;">
+                        <i class="fa-solid {{ p.icon }} text-purple small"></i>
+                    </div>
+                    <span class="text-purple small fw-semibold">{{ p.title }}</span>
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

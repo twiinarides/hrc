@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}My Counseling Sessions — {{ site.site_name }}{% endblock %}
+
+{% block content %}
+<div class="bg-light-purple py-4">
+    <div class="container text-center">
+        <h1 class="text-purple"><i class="fa-solid fa-calendar-check me-2 text-red"></i>My Counseling Sessions</h1>
+        <p class="lead text-muted mb-0">Track your session requests and upcoming appointments.</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="text-purple fw-bold mb-0">Session History</h4>
+                <a href="{% url 'book_session' %}" class="btn btn-purple"><i class="fa-solid fa-plus me-1"></i> Book New Session</a>
+            </div>
+
+            {% for session in sessions %}
+            <div class="card card-custom border-0 shadow-sm p-4 mb-3">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                    <div>
+                        <h5 class="text-purple fw-bold mb-1">
+                            <i class="fa-solid fa-{% if session.session_type == 'individual' %}user{% elif session.session_type == 'group' %}people-group{% elif session.session_type == 'digital' %}video{% else %}house-chimney-user{% endif %} me-2 text-red"></i>
+                            {{ session.get_session_type_display }} Session
+                        </h5>
+                        <p class="text-muted small mb-1"><i class="fa-solid fa-calendar me-1"></i> Preferred: {{ session.preferred_date|date:"l, F d, Y \a\t H:i" }}</p>
+                        <p class="text-muted small mb-1"><i class="fa-solid fa-clock me-1"></i> Requested: {{ session.created_at|date:"F d, Y H:i" }}</p>
+                        {% if session.notes %}
+                        <p class="small text-dark mt-2 mb-0"><strong>Notes:</strong> {{ session.notes|truncatewords:30 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {% if session.status == 'pending' %}
+                            <span class="badge bg-warning text-dark px-3 py-2"><i class="fa-solid fa-clock me-1"></i> Pending</span>
+                        {% elif session.status == 'approved' %}
+                            <span class="badge bg-success px-3 py-2"><i class="fa-solid fa-check-double me-1"></i> Approved</span>
+                        {% elif session.status == 'completed' %}
+                            <span class="badge bg-info px-3 py-2"><i class="fa-solid fa-check me-1"></i> Completed</span>
+                        {% elif session.status == 'cancelled' %}
+                            <span class="badge bg-danger px-3 py-2"><i class="fa-solid fa-times me-1"></i> Cancelled</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-5">
+                <i class="fa-solid fa-calendar-xmark fs-1 text-muted mb-3 d-block"></i>
+                <p class="text-muted mb-3">You haven't booked any counseling sessions yet.</p>
+                <a href="{% url 'book_session' %}" class="btn btn-purple"><i class="fa-solid fa-calendar-plus me-1"></i> Book Your First Session</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

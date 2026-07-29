@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Share Your Story — {{ site.site_name }}{% endblock %}
+
+{% block content %}
+<div class="bg-light-purple py-4">
+    <div class="container text-center">
+        <span class="badge bg-purple px-3 py-2 mb-2 fs-6"><i class="fa-solid fa-pen-fancy me-1"></i> Your Voice Matters</span>
+        <h1 class="text-purple display-5 fw-bold">Share Your Story</h1>
+        <p class="lead text-muted mb-0">Your experience can inspire and encourage others. Share it with us.</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card card-custom border-0 shadow-sm p-4 p-md-5">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-purple">Title of Your Story <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control form-control-lg" placeholder="e.g. How Hope Changed My Life" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-purple">Display Name <span class="text-muted small">(or remain Anonymous)</span></label>
+                        <input type="text" name="author_alias" class="form-control" value="Anonymous" placeholder="How you'd like to be credited">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-purple">Your Story <span class="text-danger">*</span></label>
+                        <textarea name="content" class="form-control" rows="8" placeholder="Tell us your story in your own words. How did Hope Reception Centre impact your life?" required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-purple">Photo <span class="text-muted small">(Optional)</span></label>
+                        <input type="file" name="photo" class="form-control" accept="image/*">
+                        <small class="text-muted">A photo to accompany your story. Your face will only be shown with your consent.</small>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" name="has_user_consent" id="consentCheck">
+                        <label class="form-check-label small text-muted" for="consentCheck">
+                            I consent to my story and photo being published on the Hope Reception Centre website and social media channels.
+                        </label>
+                    </div>
+
+                    <div class="alert alert-purple border-0 small mb-4">
+                        <i class="fa-solid fa-info-circle me-2"></i>All stories are reviewed by our team before publishing. We respect your privacy and will never publish without consent.
+                    </div>
+
+                    <button type="submit" class="btn btn-purple btn-lg w-100">
+                        <i class="fa-solid fa-paper-plane me-2"></i>Submit Your Story
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

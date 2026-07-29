@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}About Us - {{ site.site_name }}{% endblock %}
+
+{% block content %}
+<div class="bg-light-purple py-5">
+    <div class="container text-center">
+        <h1 class="text-purple display-4">About Hope Reception Centre</h1>
+        <p class="lead text-muted">Established in {{ site.established_year }} • Kijuguta Ward, Northern Division, Kabale Municipality</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row g-5">
+        <div class="col-lg-8">
+            <h2 class="text-purple mb-3">Our History & Background</h2>
+            <p class="lh-lg">{{ site.about_text }}</p>
+
+            <h3 class="text-purple mt-4 mb-3">Our Mission</h3>
+            <p class="p-3 bg-light-purple border-start border-4 border-purple rounded">{{ site.mission }}</p>
+
+            <h3 class="text-purple mt-4 mb-3">Our Vision</h3>
+            <p class="p-3 bg-light-purple border-start border-4 border-red rounded">{{ site.vision }}</p>
+
+            <!-- Board of Directors with Photo Rendering Fix -->
+            <h3 class="text-purple mt-5 mb-4" id="directors">Board of Directors</h3>
+            <p class="text-muted mb-4"><i class="fa-solid fa-circle-info text-purple me-1"></i> Click on any director card below to view their uploaded photo and full biography profile.</p>
+
+            <div class="row g-4">
+                {% for director in directors %}
+                    <div class="col-md-6">
+                        <div class="card card-custom p-3 text-center h-100 shadow-sm cursor-pointer" data-bs-toggle="modal" data-bs-target="#directorModal{{ director.id }}" style="cursor: pointer;">
+                            <div class="card-body">
+                                {% if director.photo %}
+                                    <img src="{{ director.photo.url }}" class="rounded-circle mb-3 border border-3 border-purple shadow-sm" alt="{{ director.name }}" style="width: 100px; height: 100px; object-fit: cover;">
+                                {% else %}
+                                    <div class="rounded-circle bg-light-purple mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 100px; height: 100px;">
+                                        <i class="fa-solid fa-user-tie fs-1 text-purple"></i>
+                                    </div>
+                                {% endif %}
+                                <h5 class="text-purple mb-1">{{ director.name }}</h5>
+                                <small class="text-red fw-bold mb-2 d-block">{{ director.title }}</small>
+                                <button class="btn btn-sm btn-outline-purple mt-2"><i class="fa-solid fa-address-card me-1"></i> Read Full Bio</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal for Director Bio -->
+                    <div class="modal fade" id="directorModal{{ director.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content rounded-4 border-0">
+                                <div class="modal-header bg-purple text-white">
+                                    <h5 class="modal-title text-white"><i class="fa-solid fa-user-tie me-2"></i>{{ director.name }}</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body p-4 text-center">
+                                    {% if director.photo %}
+                                        <img src="{{ director.photo.url }}" class="rounded-circle border border-3 border-purple shadow-sm mb-3" alt="{{ director.name }}" style="width: 130px; height: 130px; object-fit: cover;">
+                                    {% endif %}
+                                    <span class="badge bg-red mb-3 fs-6 d-inline-block">{{ director.title }}</span>
+                                    <h6 class="text-purple fw-bold mb-2 text-start">Biography & Responsibility:</h6>
+                                    <p class="text-muted lh-base mb-0 text-start">
+                                        {{ director.bio|default:"Dedicated leadership team member serving Hope Reception Centre since establishment, providing strategic direction, legal compliance, financial management, and holistic welfare support to children in Kabale." }}
+                                    </p>
+                                </div>
+                                <div class="modal-footer border-0">
+                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card card-custom p-4 bg-purple text-white mb-4 shadow">
+                <h4>Address & Location</h4>
+                <p class="mb-1"><i class="fa-solid fa-map-pin me-2 text-red"></i>{{ site.address }}</p>
+                <p class="mb-1"><i class="fa-solid fa-phone me-2 text-red"></i>{{ site.phone }}</p>
+                <p class="mb-0"><i class="fa-solid fa-envelope me-2 text-red"></i>{{ site.email }}</p>
+            </div>
+
+            <div class="card card-custom p-4 bg-light shadow-sm">
+                <h4 class="text-purple">Support Our Work</h4>
+                <p class="small text-muted">Your donation helps us provide food, shelter, schooling, and counseling for vulnerable children in Kabale.</p>
+                <a href="{% url 'donate' %}" class="btn btn-red w-100"><i class="fa-solid fa-heart me-1"></i> {{ site.donate_button_text }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

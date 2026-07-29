@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ article.title }} — {{ site.site_name }}{% endblock %}
+
+{% block og_tags %}
+<meta property="og:title" content="{{ article.title }}">
+<meta property="og:description" content="{{ article.content|truncatewords:30 }}">
+{% if article.featured_image %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ article.featured_image.url }}">{% endif %}
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hope Reception Centre">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ article.title }}">
+<meta name="twitter:description" content="{{ article.content|truncatewords:30 }}">
+{% if article.featured_image %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ article.featured_image.url }}">{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <a href="{% url 'news_list' %}" class="text-purple small mb-3 d-inline-block"><i class="fa-solid fa-arrow-left me-1"></i> Back to News</a>
+
+            {% if article.featured_image %}
+            <img src="{{ article.featured_image.url }}" class="img-fluid rounded-4 shadow mb-4 w-100" alt="{{ article.title }}" style="max-height:450px;object-fit:cover;">
+            {% endif %}
+
+            <div class="d-flex gap-2 flex-wrap mb-3">
+                <span class="badge bg-purple"><i class="fa-solid fa-calendar me-1"></i>{{ article.created_at|date:"F d, Y" }}</span>
+                {% if article.author %}<span class="badge bg-light text-purple"><i class="fa-solid fa-user me-1"></i>{{ article.author.username }}</span>{% endif %}
+                <span class="badge bg-light text-muted"><i class="fa-solid fa-eye me-1"></i>{{ article.views_count }} views</span>
+            </div>
+
+            <h1 class="display-5 text-purple fw-bold mb-4">{{ article.title }}</h1>
+
+            <div class="fs-5 lh-lg text-dark mb-5">{{ article.content|linebreaks }}</div>
+
+            <!-- Gallery Images -->
+            {% if article.gallery_images.all %}
+            <h4 class="text-purple fw-bold mb-3"><i class="fa-solid fa-images me-2 text-red"></i>Photo Gallery</h4>
+            <div class="row g-2 mb-5">
+                {% for img in article.gallery_images.all %}
+                <div class="col-md-4 col-6">
+                    <a href="{{ img.image.url }}" target="_blank">
+                        <img src="{{ img.image.url }}" class="img-fluid rounded-3 shadow-sm" alt="{{ img.caption|default:article.title }}" style="height:180px;object-fit:cover;width:100%;">
+                    </a>
+                    {% if img.caption %}<small class="text-muted d-block mt-1">{{ img.caption }}</small>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Social Sharing Buttons -->
+            <div class="card card-custom border-0 shadow-sm p-4 bg-light-purple">
+                <h5 class="text-purple fw-bold mb-3"><i class="fa-solid fa-share-nodes me-2 text-red"></i>Share This Article</h5>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri|urlencode }}" target="_blank" class="btn btn-primary btn-sm">
+                        <i class="fa-brands fa-facebook me-1"></i> Facebook
+                    </a>
+                    <a href="https://twitter.com/intent/tweet?url={{ request.build_absolute_uri|urlencode }}&text={{ article.title|urlencode }}" target="_blank" class="btn btn-sm" style="background:#000;color:#fff;">
+                        <i class="fa-brands fa-x-twitter me-1"></i> X (Twitter)
+                    </a>
+                    <a href="https://wa.me/?text={{ article.title|urlencode }}%20{{ request.build_absolute_uri|urlencode }}" target="_blank" class="btn btn-success btn-sm">
+                        <i class="fa-brands fa-whatsapp me-1"></i> WhatsApp
+                    </a>
+                    <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ request.build_absolute_uri|urlencode }}&title={{ article.title|urlencode }}" target="_blank" class="btn btn-sm" style="background:#0077b5;color:#fff;">
+                        <i class="fa-brands fa-linkedin me-1"></i> LinkedIn
+                    </a>
+                    <a href="https://t.me/share/url?url={{ request.build_absolute_uri|urlencode }}&text={{ article.title|urlencode }}" target="_blank" class="btn btn-sm" style="background:#0088cc;color:#fff;">
+                        <i class="fa-brands fa-telegram me-1"></i> Telegram
+                    </a>
+                    <button onclick="navigator.clipboard.writeText('{{ request.build_absolute_uri }}');this.innerHTML='<i class=\'fa-solid fa-check me-1\'></i> Copied!';" class="btn btn-outline-secondary btn-sm">
+                        <i class="fa-solid fa-link me-1"></i> Copy Link
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

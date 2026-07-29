@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account — {{ site.site_name }}{% endblock %}
+
+{% block content %}
+<div class="min-vh-100 d-flex align-items-center" style="background: linear-gradient(135deg, #f5edfa 0%, #fff 60%, #ffeef0 100%);">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+                <div class="card border-0 shadow-lg rounded-4 p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <div class="rounded-circle bg-light-purple d-inline-flex align-items-center justify-content-center mb-3" style="width:70px;height:70px;">
+                            <i class="fa-solid fa-user-plus fs-1 text-purple"></i>
+                        </div>
+                        <h2 class="text-purple fw-bold mb-1">Create Your Account</h2>
+                        <p class="text-muted small mb-0">Join to access videos, programs, and counseling support</p>
+                    </div>
+
+                    <!-- Google Signup -->
+                    <a href="{% url 'google_login' %}" class="btn btn-outline-secondary w-100 mb-3 py-2 d-flex align-items-center justify-content-center gap-2 fw-semibold" style="border-color:#ddd;">
+                        <svg width="20" height="20" viewBox="0 0 48 48">
+                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                        </svg>
+                        Continue with Google
+                    </a>
+
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <hr class="flex-grow-1 m-0">
+                        <span class="text-muted small px-2">or register with phone & username</span>
+                        <hr class="flex-grow-1 m-0">
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="row g-3 mb-3">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold text-purple small">Username <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light-purple border-0"><i class="fa-solid fa-user text-purple"></i></span>
+                                    <input type="text" name="username" class="form-control border-start-0 ps-0" placeholder="Choose a username" required>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold text-purple small">Email Address <span class="text-muted small">(optional)</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light-purple border-0"><i class="fa-solid fa-envelope text-purple"></i></span>
+                                    <input type="email" name="email" class="form-control border-start-0 ps-0" placeholder="your@email.com">
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold text-purple small">Phone Number <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light-purple border-0"><i class="fa-solid fa-phone text-purple"></i></span>
+                                    <input type="tel" name="phone_number" class="form-control border-start-0 ps-0" placeholder="07XX XXX XXX" required>
+                                </div>
+                                <small class="text-muted">We use this to contact you about your sessions and applications.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-purple small">Password <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light-purple border-0"><i class="fa-solid fa-lock text-purple"></i></span>
+                                    <input type="password" name="password" class="form-control border-start-0 ps-0" placeholder="Create password" required minlength="8">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-purple small">Confirm Password <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light-purple border-0"><i class="fa-solid fa-lock text-purple"></i></span>
+                                    <input type="password" name="confirm_password" class="form-control border-start-0 ps-0" placeholder="Repeat password" required minlength="8">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <small class="text-muted"><i class="fa-solid fa-shield-halved text-purple me-1"></i>Your personal information is kept strictly confidential and will never be shared without your consent.</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-purple w-100 btn-lg mb-3">
+                            <i class="fa-solid fa-user-plus me-2"></i>Create Account
+                        </button>
+                    </form>
+
+                    <div class="text-center">
+                        <p class="text-muted small mb-0">Already have an account? <a href="{% url 'login' %}" class="text-red fw-bold">Sign In</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

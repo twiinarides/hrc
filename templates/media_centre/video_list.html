@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Videos & Live Sessions — {{ site.site_name }}{% endblock %}
+
+{% block content %}
+<div class="py-5" style="background: linear-gradient(135deg, #6B2D8B 0%, #3d1455 100%);">
+    <div class="container text-center text-white">
+        <span class="badge bg-red px-3 py-2 mb-3 fs-6"><i class="fa-solid fa-video me-1"></i> Media Centre</span>
+        <h1 class="display-4 fw-bold">Videos & Live Sessions</h1>
+        <p class="lead text-white-75">Watch recorded sessions, interviews, and join live events.</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    {% if live_videos %}
+    <div class="mb-5">
+        <h3 class="text-red fw-bold mb-4"><i class="fa-solid fa-tower-broadcast me-2"></i>Live Now</h3>
+        <div class="row g-4">
+            {% for video in live_videos %}
+            <div class="col-lg-6">
+                <div class="card border-danger border-2 shadow-lg rounded-4 overflow-hidden hover-lift">
+                    {% if video.thumbnail %}
+                    <div class="position-relative">
+                        <img src="{{ video.thumbnail.url }}" class="card-img-top" alt="{{ video.title }}" style="height:250px;object-fit:cover;">
+                        <div class="position-absolute top-0 start-0 m-3">
+                            <span class="badge bg-danger px-3 py-2 pulse-animation"><i class="fa-solid fa-circle me-1" style="font-size:8px;"></i> LIVE</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="card-body p-4">
+                        <h4 class="text-purple fw-bold">{{ video.title }}</h4>
+                        <p class="text-muted">{{ video.description|truncatewords:20 }}</p>
+                        <a href="{% url 'video_detail' video.slug %}" class="btn btn-red btn-lg w-100">
+                            <i class="fa-solid fa-play me-1"></i> Join Live Session
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <h3 class="text-purple fw-bold mb-4"><i class="fa-solid fa-film me-2 text-red"></i>Recorded Videos</h3>
+    <div class="row g-4">
+        {% for video in videos %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card card-custom border-0 shadow-sm h-100 overflow-hidden hover-lift">
+                {% if video.thumbnail %}
+                <div class="position-relative">
+                    <img src="{{ video.thumbnail.url }}" class="card-img-top" alt="{{ video.title }}" style="height:200px;object-fit:cover;">
+                    <div class="position-absolute top-50 start-50 translate-middle">
+                        <div class="rounded-circle bg-purple d-flex align-items-center justify-content-center shadow-lg" style="width:50px;height:50px;">
+                            <i class="fa-solid fa-play text-white"></i>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="bg-dark d-flex align-items-center justify-content-center position-relative" style="height:200px;">
+                    <div class="rounded-circle bg-purple d-flex align-items-center justify-content-center" style="width:50px;height:50px;">
+                        <i class="fa-solid fa-play text-white"></i>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="card-body p-4">
+                    <div class="d-flex gap-2 mb-2">
+                        <span class="badge bg-light text-muted small"><i class="fa-solid fa-eye me-1"></i>{{ video.views_count }}</span>
+                        {% if video.requires_login %}<span class="badge bg-light text-purple small"><i class="fa-solid fa-lock me-1"></i>Login Required</span>{% endif %}
+                    </div>
+                    <h5 class="text-purple fw-bold">{{ video.title }}</h5>
+                    <p class="text-muted small">{{ video.description|truncatewords:15|default:"" }}</p>
+                    <a href="{% url 'video_detail' video.slug %}" class="btn btn-outline-purple btn-sm">
+                        <i class="fa-solid fa-play me-1"></i> Watch Now
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="fa-solid fa-video-slash fs-1 text-muted mb-3 d-block"></i>
+            <p class="text-muted">No videos available yet. Check back soon!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+@keyframes pulseAnim { 0%{opacity:1;} 50%{opacity:0.5;} 100%{opacity:1;} }
+.pulse-animation { animation: pulseAnim 1.5s infinite; }
+</style>
+{% endblock %}

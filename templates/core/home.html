@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- Hero Banner -->
+<div class="hero-banner">
+    <div class="container">
+        <h1 class="display-3 mb-3">{{ site.hero_title }}</h1>
+        <p class="lead mb-4 fs-4 fw-light">{{ site.hero_subtext }}</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'donate' %}" class="btn btn-red btn-lg"><i class="fa-solid fa-heart me-2"></i>{{ site.donate_button_text }}</a>
+            <a href="{% url 'anonymous_chat' %}" class="btn btn-light btn-lg text-purple fw-semibold"><i class="fa-solid fa-shield-cat me-2"></i>{{ site.anonymous_button_text }}</a>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Counter Banner -->
+<div class="bg-light-purple py-4 border-bottom">
+    <div class="container text-center">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <h2 class="text-purple mb-0">{{ site.established_year }}</h2>
+                <small class="text-muted fw-bold">ESTABLISHED YEAR</small>
+            </div>
+            <div class="col-md-3">
+                <h2 class="text-red mb-0">1,500+</h2>
+                <small class="text-muted fw-bold">CHILDREN RECEPTED & CARED FOR</small>
+            </div>
+            <div class="col-md-3">
+                <h2 class="text-purple mb-0">500+</h2>
+                <small class="text-muted fw-bold">COUNSELING SESSIONS</small>
+            </div>
+            <div class="col-md-3">
+                <h2 class="text-red mb-0">Kabale</h2>
+                <small class="text-muted fw-bold">NORTHERN DIVISION, KIJUGUTA</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Overview -->
+<div class="container py-5">
+    <div class="row align-items-center g-5 mb-5">
+        <div class="col-lg-6">
+            <h2 class="text-purple mb-3">About Hope Reception Centre</h2>
+            <p class="lead">{{ site.about_text }}</p>
+            <p>We provide a safe haven, formal digital and in-person counseling, emergency shelter, and educational support to children across Kabale district and Western Uganda.</p>
+            <a href="{% url 'about' %}" class="btn btn-purple"><i class="fa-solid fa-circle-info me-2"></i>Read Our Story</a>
+        </div>
+        <div class="col-lg-6 text-center">
+            <img src="{% static 'images/logo.png' %}" alt="Hope Reception Centre Logo" class="img-fluid p-4 bg-white rounded shadow-sm" style="max-height: 350px;">
+        </div>
+    </div>
+
+    <!-- Programs Highlight -->
+    <div class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-purple mb-0">Our Services & Programs</h2>
+            <a href="{% url 'program_list' %}" class="text-red fw-bold text-decoration-none">View All Programs <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        <div class="row g-4">
+            {% for program in programs %}
+                <div class="col-md-4">
+                    <div class="card card-custom h-100 p-3">
+                        <div class="card-body">
+                            <div class="text-purple fs-1 mb-3"><i class="fa-solid {{ program.icon }}"></i></div>
+                            <h4 class="card-title text-purple">{{ program.title }}</h4>
+                            <p class="card-text text-muted">{{ program.summary }}</p>
+                            <a href="{% url 'program_detail' program.slug %}" class="btn btn-sm btn-outline-purple">Learn More</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12 text-center text-muted">
+                    <p>Programs will be listed here soon.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Media & Live Video Section -->
+    <div class="bg-light-purple rounded-4 p-4 p-md-5 mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <span class="badge-live mb-2"><i class="fa-solid fa-video me-1"></i> LIVE & RECORDED MEDIA</span>
+                <h2 class="text-purple mb-0">Digital Counseling & Live Streams</h2>
+            </div>
+            <a href="{% url 'video_list' %}" class="btn btn-purple">Watch All Videos</a>
+        </div>
+        <div class="row g-4">
+            {% for video in videos %}
+                <div class="col-md-4">
+                    <div class="card card-custom bg-white h-100 overflow-hidden">
+                        <div class="card-body">
+                            {% if video.is_live %}
+                                <span class="badge bg-danger mb-2">LIVE STREAM</span>
+                            {% else %}
+                                <span class="badge bg-purple mb-2">RECORDED VIDEO</span>
+                            {% endif %}
+                            <h5 class="card-title text-purple">{{ video.title }}</h5>
+                            <p class="card-text small text-muted">{{ video.description|truncatewords:15 }}</p>
+                            <a href="{% url 'video_detail' video.slug %}" class="btn btn-sm btn-red"><i class="fa-solid fa-play me-1"></i>Watch Now</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12 text-center text-muted">
+                    <p>No videos available yet. Check back soon for live streaming interviews and sessions!</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Directors Section with Photo Display Fix -->
+    <div class="mb-5">
+        <h2 class="text-purple mb-4 text-center">Board of Directors</h2>
+        <div class="row g-4 justify-content-center">
+            {% for director in directors %}
+                <div class="col-md-4 col-lg-3">
+                    <div class="card card-custom text-center h-100 p-3 shadow-sm cursor-pointer" data-bs-toggle="modal" data-bs-target="#homeDirectorModal{{ director.id }}" style="cursor: pointer;">
+                        <div class="card-body">
+                            {% if director.photo %}
+                                <img src="{{ director.photo.url }}" class="rounded-circle mb-3 border border-3 border-purple shadow-sm" alt="{{ director.name }}" style="width: 90px; height: 90px; object-fit: cover;">
+                            {% else %}
+                                <div class="rounded-circle bg-light-purple mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 90px; height: 90px;">
+                                    <i class="fa-solid fa-user-tie fs-2 text-purple"></i>
+                                </div>
+                            {% endif %}
+                            <h5 class="card-title text-purple mb-1">{{ director.name }}</h5>
+                            <small class="text-red fw-semibold d-block mb-2">{{ director.title }}</small>
+                            <span class="badge bg-outline-purple text-purple border"><i class="fa-solid fa-id-card me-1"></i> View Bio</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal for Director Bio on Homepage -->
+                <div class="modal fade" id="homeDirectorModal{{ director.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content rounded-4 border-0">
+                            <div class="modal-header bg-purple text-white">
+                                <h5 class="modal-title text-white"><i class="fa-solid fa-user-tie me-2"></i>{{ director.name }}</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body p-4 text-start">
+                                {% if director.photo %}
+                                    <div class="text-center mb-3">
+                                        <img src="{{ director.photo.url }}" class="rounded-circle border border-3 border-purple shadow-sm" alt="{{ director.name }}" style="width: 120px; height: 120px; object-fit: cover;">
+                                    </div>
+                                {% endif %}
+                                <span class="badge bg-red mb-3 fs-6 d-inline-block">{{ director.title }}</span>
+                                <h6 class="text-purple fw-bold mb-2">Biography & Profile:</h6>
+                                <p class="text-muted lh-base mb-0">
+                                    {{ director.bio|default:"Dedicated leadership team member serving Hope Reception Centre since establishment, providing strategic direction, legal compliance, financial management, and holistic welfare support to children in Kabale." }}
+                                </p>
+                            </div>
+                            <div class="modal-footer border-0">
+                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

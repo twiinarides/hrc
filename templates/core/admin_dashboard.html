@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Control Dashboard — {{ site.site_name }}{% endblock %}
+
+{% block content %}
+<div class="py-4" style="background: linear-gradient(135deg, #3d1455 0%, #6B2D8B 60%, #C41230 100%); color:#fff;">
+    <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <span class="badge bg-danger px-3 py-2 mb-2"><i class="fa-solid fa-user-shield me-1"></i> Management Console</span>
+            <h1 class="display-6 fw-bold mb-0 text-white"><i class="fa-solid fa-gauge-high me-2"></i>Executive Admin Dashboard</h1>
+            <p class="text-white-75 small mb-0">Overview of site traffic, applications, donations, counseling requests, and content management.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/admin/" target="_blank" class="btn btn-light text-purple fw-bold shadow-sm">
+                <i class="fa-solid fa-toolbox me-1"></i> Open Django Admin Console
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+
+    <!-- KPI Metric Cards Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm p-3 text-center bg-white rounded-3 border-start border-4 border-purple">
+                <i class="fa-solid fa-eye fs-2 text-purple mb-1"></i>
+                <h3 class="fw-bold text-purple mb-0">{{ total_visitors }}</h3>
+                <small class="text-muted fw-semibold">Page Views Logged</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm p-3 text-center bg-white rounded-3 border-start border-4 border-danger">
+                <i class="fa-solid fa-users fs-2 text-danger mb-1"></i>
+                <h3 class="fw-bold text-danger mb-0">{{ total_users }}</h3>
+                <small class="text-muted fw-semibold">Registered Accounts</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm p-3 text-center bg-white rounded-3 border-start border-4 border-success">
+                <i class="fa-solid fa-hands-holding-child fs-2 text-success mb-1"></i>
+                <h3 class="fw-bold text-success mb-0">{{ total_applications }}</h3>
+                <small class="text-muted fw-semibold">Program Applications ({{ pending_applications }} Pending)</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm p-3 text-center bg-white rounded-3 border-start border-4 border-warning">
+                <i class="fa-solid fa-calendar-check fs-2 text-warning mb-1"></i>
+                <h3 class="fw-bold text-dark mb-0">{{ total_sessions }}</h3>
+                <small class="text-muted fw-semibold">Counseling Requests ({{ pending_sessions }} Pending)</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Navigation Links to Django Admin Modules -->
+    <div class="card card-custom border-0 shadow-sm p-4 mb-4 bg-light-purple">
+        <h5 class="text-purple fw-bold mb-3"><i class="fa-solid fa-screwdriver-wrench me-2 text-red"></i>Direct Admin Management Modules</h5>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="/admin/core/sitesetting/" target="_blank" class="btn btn-white btn-sm border text-purple shadow-sm"><i class="fa-solid fa-sliders me-1"></i> Site Configuration / Words</a>
+            <a href="/admin/core/director/" target="_blank" class="btn btn-white btn-sm border text-purple shadow-sm"><i class="fa-solid fa-user-tie me-1"></i> Directors & Leadership Photos</a>
+            <a href="/admin/programs/programapplication/" target="_blank" class="btn btn-white btn-sm border text-purple shadow-sm"><i class="fa-solid fa-hands-holding-child me-1"></i> Program Applications</a>
+            <a href="/admin/programs/program/" target="_blank" class="btn btn-white btn-sm border text-purple shadow-sm"><i class="fa-solid fa-list me-1"></i> Manage Programs</a>
+            <a href="/admin/counseling/counselingsession/" target="_blank" class="btn btn-white btn-sm border text-purple shadow-sm"><i class="fa-solid fa-user-doctor me-1"></i> Counseling Sessions</a>
+            <a href="/admin/counseling/anonymoussupportthread/" target="_blank" class="btn btn-white btn-sm border text-purple shadow-sm"><i class="fa-solid fa-user-secret me-1"></i> Anonymous Chats</a>
+            <a href="/admin/media_centre/newsarticle/" target="_blank" class="btn btn-white btn-sm border text-purple shadow-sm"><i class="fa-solid fa-newspaper me-1"></i> News Articles</a>
+            <a href="/admin/media_centre/video/" target="_blank" class="btn btn-white btn-sm border text-purple shadow-sm"><i class="fa-solid fa-video me-1"></i> Videos & Live Streams</a>
+            <a href="/admin/media_centre/eventalbum/" target="_blank" class="btn btn-white btn-sm border text-purple shadow-sm"><i class="fa-solid fa-images me-1"></i> Photo Albums / Gallery</a>
+            <a href="/admin/donations/donation/" target="_blank" class="btn btn-white btn-sm border text-purple shadow-sm"><i class="fa-solid fa-heart me-1"></i> Donations</a>
+        </div>
+    </div>
+
+    <!-- Main Content Tabs / Rows -->
+    <div class="row g-4 mb-4">
+
+        <!-- Left Column: Pending Approvals & Applications -->
+        <div class="col-lg-7">
+
+            <!-- Pending Program Applications -->
+            <div class="card card-custom border-0 shadow-sm p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-purple fw-bold mb-0"><i class="fa-solid fa-hands-holding-child me-2 text-red"></i>Recent Program Applications</h5>
+                    <a href="/admin/programs/programapplication/" target="_blank" class="btn btn-outline-purple btn-sm">Manage in Admin</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Applicant</th>
+                                <th>Program</th>
+                                <th>Phone</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in recent_applications %}
+                            <tr>
+                                <td><strong>{{ app.full_name }}</strong><br><span class="text-muted">{{ app.submitted_at|date:"M d" }}</span></td>
+                                <td><i class="fa-solid {{ app.program.icon }} me-1 text-purple"></i>{{ app.program.title|truncatewords:3 }}</td>
+                                <td><a href="tel:{{ app.phone_number }}" class="text-purple">{{ app.phone_number }}</a></td>
+                                <td>
+                                    {% if app.status == 'pending' %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    {% elif app.status == 'approved' %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ app.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="/admin/programs/programapplication/{{ app.id }}/change/" target="_blank" class="btn btn-outline-purple btn-sm">Review</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted py-3">No applications submitted yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Counseling Requests -->
+            <div class="card card-custom border-0 shadow-sm p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-purple fw-bold mb-0"><i class="fa-solid fa-user-doctor me-2 text-red"></i>Counseling Session Requests</h5>
+                    <a href="/admin/counseling/counselingsession/" target="_blank" class="btn btn-outline-purple btn-sm">Manage All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>User</th>
+                                <th>Type</th>
+                                <th>Preferred Date</th>
+                                <th>Status</th>
+                                <th>Quick Approve</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in recent_sessions %}
+                            <tr>
+                                <td><strong>{{ session.client.username }}</strong></td>
+                                <td>{{ session.get_session_type_display }}</td>
+                                <td>{{ session.preferred_date|date:"M d, H:i" }}</td>
+                                <td>
+                                    {% if session.status == 'pending' %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    {% else %}
+                                        <span class="badge bg-success">{{ session.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if session.status == 'pending' %}
+                                    <a href="{% url 'approve_session' session.id %}" class="btn btn-success btn-sm py-0 px-2">Approve</a>
+                                    {% else %}
+                                    <span class="text-muted small">Done</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted py-3">No session requests yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Anonymous Support Threads -->
+            <div class="card card-custom border-0 shadow-sm p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-purple fw-bold mb-0"><i class="fa-solid fa-user-secret me-2 text-red"></i>Anonymous Support Chats</h5>
+                    <a href="/admin/counseling/anonymoussupportthread/" target="_blank" class="btn btn-outline-purple btn-sm">Reply in Admin</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Token</th>
+                                <th>Category</th>
+                                <th>Messages</th>
+                                <th>Created</th>
+                                <th>Reply</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for thread in anonymous_threads %}
+                            <tr>
+                                <td><code>{{ thread.token|slice:":8" }}...</code></td>
+                                <td><span class="badge bg-light text-purple">{{ thread.category }}</span></td>
+                                <td>{{ thread.messages.count }}</td>
+                                <td>{{ thread.created_at|date:"M d, H:i" }}</td>
+                                <td>
+                                    <a href="/admin/counseling/anonymoussupportthread/{{ thread.id }}/change/" target="_blank" class="btn btn-outline-danger btn-sm py-0 px-2">Reply</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted py-3">No active anonymous chats.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Story Approvals, Donations, Site Visitors -->
+        <div class="col-lg-5">
+
+            <!-- Pending User Stories Moderation -->
+            <div class="card card-custom border-0 shadow-sm p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-purple fw-bold mb-0"><i class="fa-solid fa-heart me-2 text-red"></i>User Story Moderation</h5>
+                    <span class="badge bg-danger">{{ pending_stories }} Pending</span>
+                </div>
+                {% for story in pending_story_list %}
+                <div class="border rounded-3 p-3 mb-2 bg-light">
+                    <h6 class="fw-bold text-purple mb-1">{{ story.title }}</h6>
+                    <p class="small text-muted mb-2">By: <strong>{{ story.author_alias }}</strong> &nbsp;|&nbsp; "{{ story.content|truncatewords:20 }}"</p>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'approve_story' story.id %}" class="btn btn-success btn-sm"><i class="fa-solid fa-check me-1"></i> Approve & Publish</a>
+                        <a href="{% url 'reject_story' story.id %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Reject and delete this story?')">Reject</a>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted small mb-0">No stories pending moderation.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Recent Donations Verification -->
+            <div class="card card-custom border-0 shadow-sm p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-purple fw-bold mb-0"><i class="fa-solid fa-hand-holding-dollar me-2 text-red"></i>Recent Donations</h5>
+                    <a href="/admin/donations/donation/" target="_blank" class="btn btn-outline-purple btn-sm">All Donations</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small">
+                        <thead>
+                            <tr>
+                                <th>Donor</th>
+                                <th>Amount</th>
+                                <th>Verified</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for donation in recent_donations %}
+                            <tr>
+                                <td>{{ donation.donor_name }}<br><small class="text-muted">{{ donation.payment_method }}</small></td>
+                                <td class="fw-bold text-purple">UGX {{ donation.amount }}</td>
+                                <td>
+                                    {% if donation.is_verified %}
+                                        <span class="badge bg-success">Verified</span>
+                                    {% else %}
+                                        <a href="{% url 'verify_donation' donation.id %}" class="btn btn-warning btn-sm py-0 px-2 text-dark">Verify</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="text-center text-muted py-2">No donations recorded yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Recent Visitors & Traffic Log -->
+            <div class="card card-custom border-0 shadow-sm p-4">
+                <h5 class="text-purple fw-bold mb-3"><i class="fa-solid fa-chart-line me-2 text-red"></i>Recent Traffic & Logs</h5>
+                <div class="table-responsive" style="max-height:300px;overflow-y:auto;">
+                    <table class="table table-hover align-middle small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Time</th>
+                                <th>Path</th>
+                                <th>User / IP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in recent_views %}
+                            <tr>
+                                <td><small class="text-muted">{{ log.timestamp|date:"H:i:s" }}</small></td>
+                                <td><code>{{ log.path }}</code></td>
+                                <td>
+                                    {% if log.user %}
+                                        <span class="badge bg-purple">{{ log.user.username }}</span>
+                                    {% else %}
+                                        <span class="text-muted">{{ log.ip_address|default:"Visitor" }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="text-center text-muted py-2">No traffic logged yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

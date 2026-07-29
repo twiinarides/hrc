@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}News & Updates — {{ site.site_name }}{% endblock %}
+
+{% block og_tags %}
+<meta property="og:title" content="News & Updates — Hope Reception Centre">
+<meta property="og:description" content="Latest news, articles, and updates from Hope Reception Centre, Kabale, Uganda.">
+<meta property="og:type" content="website">
+{% endblock %}
+
+{% block content %}
+<div class="py-5" style="background: linear-gradient(135deg, #6B2D8B 0%, #3d1455 100%);">
+    <div class="container text-center text-white">
+        <span class="badge bg-red px-3 py-2 mb-3 fs-6"><i class="fa-solid fa-newspaper me-1"></i> Media Centre</span>
+        <h1 class="display-4 fw-bold">News & Updates</h1>
+        <p class="lead text-white-75">Stay informed about our work, events, and community impact.</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row g-4">
+        {% for article in articles %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card card-custom border-0 shadow-sm h-100 overflow-hidden hover-lift">
+                {% if article.featured_image %}
+                <img src="{{ article.featured_image.url }}" class="card-img-top" alt="{{ article.title }}" style="height:220px;object-fit:cover;">
+                {% else %}
+                <div class="bg-light-purple d-flex align-items-center justify-content-center" style="height:220px;">
+                    <i class="fa-solid fa-newspaper fs-1 text-purple"></i>
+                </div>
+                {% endif %}
+                <div class="card-body d-flex flex-column p-4">
+                    <div class="d-flex gap-2 mb-2">
+                        <span class="badge bg-light text-purple small"><i class="fa-solid fa-calendar me-1"></i>{{ article.created_at|date:"M d, Y" }}</span>
+                        <span class="badge bg-light text-muted small"><i class="fa-solid fa-eye me-1"></i>{{ article.views_count }}</span>
+                    </div>
+                    <h5 class="card-title text-purple fw-bold">{{ article.title }}</h5>
+                    <p class="card-text text-muted small flex-grow-1">{{ article.content|truncatewords:25 }}</p>
+                    <a href="{% url 'news_detail' article.slug %}" class="btn btn-outline-purple btn-sm mt-auto align-self-start">
+                        Read Full Article <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="fa-solid fa-newspaper fs-1 text-muted mb-3 d-block"></i>
+            <p class="text-muted">No news articles published yet. Check back soon!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

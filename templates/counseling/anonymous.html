@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Anonymous Support — {{ site.site_name }}{% endblock %}
+
+{% block content %}
+<div class="py-4" style="background: linear-gradient(135deg, #3d1455 0%, #C41230 100%);">
+    <div class="container text-center text-white">
+        <i class="fa-solid fa-user-shield fs-1 mb-2 d-block"></i>
+        <h1 class="display-5 fw-bold">Anonymous Support</h1>
+        <p class="lead text-white-75 mb-0">You do not need an account. Your identity is completely confidential.</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            {% if thread %}
+            <!-- Existing Thread -->
+            <div class="alert alert-info border-0 mb-3 small">
+                <i class="fa-solid fa-bookmark me-2"></i><strong>Your Thread Token:</strong> <code>{{ thread.token }}</code>
+                <br><small class="text-muted">Save this token to return to this conversation later. Bookmark this page or note the token.</small>
+            </div>
+
+            <div class="card card-custom border-0 shadow-sm mb-4" style="max-height:500px;overflow-y:auto;" id="messageBox">
+                <div class="card-body p-4">
+                    {% for msg in messages_list %}
+                    <div class="mb-3 d-flex {% if msg.sender_is_counselor %}justify-content-start{% else %}justify-content-end{% endif %}">
+                        <div class="{% if msg.sender_is_counselor %}bg-light-purple text-dark{% else %}bg-purple text-white{% endif %} rounded-3 p-3" style="max-width:80%;">
+                            <div class="small fw-bold mb-1">
+                                {% if msg.sender_is_counselor %}
+                                    <i class="fa-solid fa-user-doctor me-1"></i> Counselor
+                                {% else %}
+                                    <i class="fa-solid fa-user-secret me-1"></i> You (Anonymous)
+                                {% endif %}
+                            </div>
+                            <div>{{ msg.content|linebreaks }}</div>
+                            <div class="text-end mt-1" style="opacity:0.7;"><small>{{ msg.timestamp|date:"M d, H:i" }}</small></div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-3">
+                        <p class="mb-0">No messages yet. Send your first message below.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Reply Form -->
+            <form method="POST" class="card card-custom border-0 shadow-sm p-4">
+                {% csrf_token %}
+                <div class="input-group">
+                    <textarea name="content" class="form-control" rows="2" placeholder="Type your message..." required></textarea>
+                    <button type="submit" class="btn btn-purple px-4"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </form>
+
+            {% else %}
+            <!-- New Thread -->
+            <div class="card card-custom border-0 shadow-lg p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div class="rounded-circle bg-light-purple d-inline-flex align-items-center justify-content-center mb-3" style="width:80px;height:80px;">
+                        <i class="fa-solid fa-comment-dots fs-1 text-purple"></i>
+                    </div>
+                    <h3 class="text-purple fw-bold">Start a Confidential Conversation</h3>
+                    <p class="text-muted">No registration required. No personal information collected. Just share what's on your mind and a trained counselor will respond.</p>
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-purple">Category <span class="text-muted small">(Optional)</span></label>
+                        <select name="category" class="form-select">
+                            <option value="General Support">General Support</option>
+                            <option value="Abuse / Violence">Abuse / Violence</option>
+                            <option value="Mental Health">Mental Health</option>
+                            <option value="Family Issues">Family Issues</option>
+                            <option value="Grief / Loss">Grief / Loss</option>
+                            <option value="Education">Education</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-purple">Your Message <span class="text-danger">*</span></label>
+                        <textarea name="content" class="form-control" rows="5" placeholder="Share what's on your mind. You are completely anonymous..." required></textarea>
+                    </div>
+
+                    <div class="alert alert-purple border-0 small mb-4">
+                        <i class="fa-solid fa-shield-halved me-2"></i>
+                        <strong>Your safety matters:</strong> No names, emails, or personal details are collected. A unique token will be generated so you can return to check responses.
+                    </div>
+
+                    <button type="submit" class="btn btn-purple btn-lg w-100">
+                        <i class="fa-solid fa-paper-plane me-2"></i>Send Message Anonymously
+                    </button>
+                </form>
+
+                <hr class="my-4">
+                <p class="text-center text-muted small mb-0">
+                    <strong>Already have a thread token?</strong><br>
+                    Return to your conversation: <code>{{ request.scheme }}://{{ request.get_host }}/counseling/anonymous/?token=YOUR_TOKEN</code>
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-scroll message box to bottom
+const box = document.getElementById('messageBox');
+if (box) box.scrollTop = box.scrollHeight;
+</script>
+{% endblock %}

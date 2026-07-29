@@ -1,0 +1,100 @@
+:root {
+  --purple-primary: #6B2D8B;
+  --purple-hover: #542270;
+  --red-crimson: #C41230;
+  --red-hover: #9E0E26;
+  --white: #FFFFFF;
+  --dark-charcoal: #1A1A2E;
+  --light-purple: #F5EDFA;
+  --gray-light: #F8F9FA;
+  --gray-border: #E0E0E0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  color: var(--dark-charcoal);
+  background-color: var(--white);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+}
+
+.text-purple { color: var(--purple-primary) !important; }
+.text-red { color: var(--red-crimson) !important; }
+
+.bg-purple { background-color: var(--purple-primary) !important; color: white; }
+.bg-red { background-color: var(--red-crimson) !important; color: white; }
+.bg-light-purple { background-color: var(--light-purple) !important; }
+
+.btn-purple {
+  background-color: var(--purple-primary);
+  color: var(--white);
+  border: none;
+  border-radius: 50px;
+  padding: 10px 24px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+.btn-purple:hover {
+  background-color: var(--purple-hover);
+  color: var(--white);
+}
+
+.btn-red {
+  background-color: var(--red-crimson);
+  color: var(--white);
+  border: none;
+  border-radius: 50px;
+  padding: 10px 24px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+.btn-red:hover {
+  background-color: var(--red-hover);
+  color: var(--white);
+}
+
+.navbar-hrc {
+  background-color: var(--white);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.hero-banner {
+  background: linear-gradient(rgba(107, 45, 139, 0.85), rgba(196, 18, 48, 0.85)), url('/static/images/logo.png') center/cover no-repeat;
+  color: white;
+  padding: 120px 0;
+  text-align: center;
+}
+
+.card-custom {
+  border: 1px solid var(--gray-border);
+  border-radius: 12px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card-custom:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(107, 45, 139, 0.1);
+}
+
+.badge-live {
+  background-color: var(--red-crimson);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+footer {
+  background-color: var(--dark-charcoal);
+  color: white;
+  padding: 50px 0 20px;
+}

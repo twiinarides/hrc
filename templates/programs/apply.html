@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Apply for {{ program.title }} — {{ site.site_name }}{% endblock %}
+
+{% block content %}
+<div class="bg-light-purple py-4 border-bottom">
+    <div class="container text-center">
+        <span class="badge bg-purple px-3 py-2 fs-6 mb-2">Program Application</span>
+        <h1 class="text-purple display-5 fw-bold"><i class="fa-solid {{ program.icon }} me-2 text-red"></i>Apply for {{ program.title }}</h1>
+        <p class="lead text-muted mb-0">Fill out this application form to request access or assistance through this program.</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card card-custom p-4 p-md-5 shadow-sm bg-white border-0">
+                <div class="alert alert-purple border-0 mb-4">
+                    <i class="fa-solid fa-circle-info me-2 text-purple"></i>
+                    Your application will be sent directly to the Executive Directors and social work team at <strong>contact@hopereceptioncenter.org</strong> and <strong>info@hopereceptioncenter.org</strong>.
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-purple">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" name="full_name" class="form-control form-control-lg" value="{{ user.get_full_name|default:user.username }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-purple">Contact Phone Number <span class="text-danger">*</span></label>
+                            <input type="tel" name="phone_number" class="form-control form-control-lg" value="{{ user.phone_number|default:'' }}" placeholder="e.g. 0772 000 000" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-purple">Age of Applicant / Child <span class="text-muted small">(Optional)</span></label>
+                            <input type="number" name="age" class="form-control form-control-lg" placeholder="e.g. 12">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-purple">Account Email</label>
+                            <input type="email" class="form-control form-control-lg bg-light" value="{{ user.email|default:'Not provided' }}" readonly>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-purple">Reason for Application & Current Situation <span class="text-danger">*</span></label>
+                        <textarea name="reason" class="form-control" rows="5" placeholder="Please describe why you are applying for {{ program.title }}, your current situation, and what specific assistance or intervention you need." required></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-purple">Additional Details / Background Info <span class="text-muted small">(Optional)</span></label>
+                        <textarea name="additional_info" class="form-control" rows="3" placeholder="Any additional background, medical details, school status, or family situation we should know."></textarea>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" id="consentCheck" required>
+                        <label class="form-check-label small text-muted" for="consentCheck">
+                            I confirm that the information provided is true and accurate to the best of my knowledge, and I consent to Hope Reception Centre contacting me regarding this application.
+                        </label>
+                    </div>
+
+                    <div class="d-flex gap-3 align-items-center">
+                        <button type="submit" class="btn btn-purple btn-lg px-5">
+                            <i class="fa-solid fa-paper-plane me-2"></i>Submit Application
+                        </button>
+                        <a href="{% url 'program_detail' program.slug %}" class="btn btn-outline-secondary btn-lg">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ album.title }} — Gallery — {{ site.site_name }}{% endblock %}
+
+{% block og_tags %}
+<meta property="og:title" content="{{ album.title }} — Hope Reception Centre Gallery">
+<meta property="og:description" content="{{ album.description|default:album.title|truncatewords:30 }}">
+{% if album.cover_photo %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ album.cover_photo.url }}">{% endif %}
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
+
+{% block content %}
+<div class="py-4 bg-light-purple border-bottom">
+    <div class="container">
+        <a href="{% url 'album_list' %}" class="text-purple small mb-2 d-inline-block"><i class="fa-solid fa-arrow-left me-1"></i> All Albums</a>
+        <h1 class="text-purple display-5 fw-bold">{{ album.title }}</h1>
+        <p class="text-muted mb-0"><i class="fa-solid fa-calendar me-1"></i>{{ album.event_date|date:"l, F d, Y" }} &nbsp;·&nbsp; <i class="fa-solid fa-images me-1"></i>{{ photos|length }} photos</p>
+        {% if album.description %}<p class="text-dark mt-2 mb-0">{{ album.description }}</p>{% endif %}
+    </div>
+</div>
+
+<div class="container py-5">
+    <!-- Share Album -->
+    <div class="d-flex justify-content-end gap-2 mb-4 flex-wrap">
+        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri|urlencode }}" target="_blank" class="btn btn-primary btn-sm"><i class="fa-brands fa-facebook me-1"></i> Share</a>
+        <a href="https://wa.me/?text={{ album.title|urlencode }}%20{{ request.build_absolute_uri|urlencode }}" target="_blank" class="btn btn-success btn-sm"><i class="fa-brands fa-whatsapp me-1"></i> WhatsApp</a>
+        <a href="https://twitter.com/intent/tweet?url={{ request.build_absolute_uri|urlencode }}&text={{ album.title|urlencode }}" target="_blank" class="btn btn-sm" style="background:#000;color:#fff;"><i class="fa-brands fa-x-twitter me-1"></i> X</a>
+        <a href="https://t.me/share/url?url={{ request.build_absolute_uri|urlencode }}&text={{ album.title|urlencode }}" target="_blank" class="btn btn-sm" style="background:#0088cc;color:#fff;"><i class="fa-brands fa-telegram me-1"></i> Telegram</a>
+        <button onclick="navigator.clipboard.writeText('{{ request.build_absolute_uri }}');this.innerHTML='<i class=\'fa-solid fa-check me-1\'></i>Copied!';" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-link me-1"></i> Copy Link</button>
+    </div>
+
+    <!-- Photo Grid -->
+    <div class="row g-3" id="galleryGrid">
+        {% for photo in photos %}
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="position-relative rounded-3 overflow-hidden shadow-sm gallery-item" style="cursor:pointer;" onclick="openLightbox({{ forloop.counter0 }})">
+                <img src="{{ photo.image.url }}" alt="{{ photo.caption|default:album.title }}" class="img-fluid w-100" style="height:220px;object-fit:cover;transition:transform 0.3s;">
+                <div class="gallery-overlay position-absolute top-0 start-0 end-0 bottom-0 d-flex align-items-center justify-content-center" style="background:rgba(107,45,139,0.0);transition:background 0.3s;">
+                    <i class="fa-solid fa-expand text-white fs-3" style="opacity:0;transition:opacity 0.3s;"></i>
+                </div>
+            </div>
+            {% if photo.caption %}<small class="text-muted d-block mt-1">{{ photo.caption }}</small>{% endif %}
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <p class="text-muted">No photos in this album yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Lightbox Modal -->
+<div id="lightboxModal" class="position-fixed top-0 start-0 w-100 h-100 d-none" style="z-index:9999;background:rgba(0,0,0,0.95);">
+    <div class="d-flex align-items-center justify-content-center h-100 position-relative">
+        <button onclick="closeLightbox()" class="btn btn-outline-light position-absolute top-0 end-0 m-3 rounded-circle" style="width:48px;height:48px;z-index:10001;"><i class="fa-solid fa-times fs-4"></i></button>
+        <button onclick="prevPhoto()" class="btn btn-outline-light position-absolute start-0 top-50 translate-middle-y ms-3 rounded-circle" style="width:48px;height:48px;z-index:10001;"><i class="fa-solid fa-chevron-left"></i></button>
+        <button onclick="nextPhoto()" class="btn btn-outline-light position-absolute end-0 top-50 translate-middle-y me-3 rounded-circle" style="width:48px;height:48px;z-index:10001;"><i class="fa-solid fa-chevron-right"></i></button>
+        <img id="lightboxImg" src="" class="img-fluid" style="max-height:85vh;max-width:90vw;object-fit:contain;">
+        <div id="lightboxCaption" class="position-absolute bottom-0 start-0 end-0 text-center text-white p-3" style="background:rgba(0,0,0,0.5);"></div>
+    </div>
+</div>
+
+<style>
+.gallery-item:hover img { transform: scale(1.05); }
+.gallery-item:hover .gallery-overlay { background: rgba(107,45,139,0.4) !important; }
+.gallery-item:hover .gallery-overlay i { opacity: 1 !important; }
+</style>
+
+<script>
+const photos = [
+    {% for photo in photos %}
+    { url: "{{ photo.image.url }}", caption: "{{ photo.caption|default:''|escapejs }}" },
+    {% endfor %}
+];
+let currentIdx = 0;
+
+function openLightbox(idx) {
+    currentIdx = idx;
+    document.getElementById('lightboxImg').src = photos[idx].url;
+    document.getElementById('lightboxCaption').textContent = photos[idx].caption || '';
+    document.getElementById('lightboxModal').classList.remove('d-none');
+    document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+    document.getElementById('lightboxModal').classList.add('d-none');
+    document.body.style.overflow = '';
+}
+function nextPhoto() {
+    currentIdx = (currentIdx + 1) % photos.length;
+    openLightbox(currentIdx);
+}
+function prevPhoto() {
+    currentIdx = (currentIdx - 1 + photos.length) % photos.length;
+    openLightbox(currentIdx);
+}
+document.addEventListener('keydown', function(e) {
+    if (document.getElementById('lightboxModal').classList.contains('d-none')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowRight') nextPhoto();
+    if (e.key === 'ArrowLeft') prevPhoto();
+});
+</script>
+{% endblock %}

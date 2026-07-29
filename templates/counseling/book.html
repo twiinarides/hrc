@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Book a Counseling Session — {{ site.site_name }}{% endblock %}
+
+{% block content %}
+<div class="py-4" style="background: linear-gradient(135deg, #f5edfa 0%, #fff 60%, #ffeef0 100%);">
+    <div class="container text-center">
+        <span class="badge bg-purple px-3 py-2 fs-6 mb-2"><i class="fa-solid fa-calendar-check me-1"></i> Counseling</span>
+        <h1 class="text-purple display-5 fw-bold">Book a Counseling Session</h1>
+        <p class="lead text-muted mb-0">Schedule a confidential session with our qualified counselors.</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row justify-content-center g-4">
+        <div class="col-lg-7">
+            <div class="card card-custom border-0 shadow-sm p-4 p-md-5">
+                <h3 class="text-purple fw-bold mb-4"><i class="fa-solid fa-calendar-plus me-2 text-red"></i>Session Request Form</h3>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-purple">Session Type <span class="text-danger">*</span></label>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <div class="form-check card p-3 border rounded-3">
+                                    <input class="form-check-input" type="radio" name="session_type" id="typeIndividual" value="individual" checked>
+                                    <label class="form-check-label w-100" for="typeIndividual">
+                                        <i class="fa-solid fa-user text-purple me-1"></i> <strong>Individual Session</strong>
+                                        <br><small class="text-muted">One-on-one with a counselor</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check card p-3 border rounded-3">
+                                    <input class="form-check-input" type="radio" name="session_type" id="typeGroup" value="group">
+                                    <label class="form-check-label w-100" for="typeGroup">
+                                        <i class="fa-solid fa-people-group text-purple me-1"></i> <strong>Group Session</strong>
+                                        <br><small class="text-muted">Peer support group</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check card p-3 border rounded-3">
+                                    <input class="form-check-input" type="radio" name="session_type" id="typeDigital" value="digital">
+                                    <label class="form-check-label w-100" for="typeDigital">
+                                        <i class="fa-solid fa-video text-purple me-1"></i> <strong>Digital / Online</strong>
+                                        <br><small class="text-muted">Video call session</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check card p-3 border rounded-3">
+                                    <input class="form-check-input" type="radio" name="session_type" id="typeFamily" value="family">
+                                    <label class="form-check-label w-100" for="typeFamily">
+                                        <i class="fa-solid fa-house-chimney-user text-purple me-1"></i> <strong>Family Session</strong>
+                                        <br><small class="text-muted">Family counseling</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-purple">Preferred Date & Time <span class="text-danger">*</span></label>
+                        <input type="datetime-local" name="preferred_date" class="form-control form-control-lg" required>
+                        <small class="text-muted">Sessions are available Monday–Saturday, 8:00 AM – 5:00 PM EAT.</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-purple">Brief Notes / Reason <span class="text-muted small">(Optional)</span></label>
+                        <textarea name="notes" class="form-control" rows="4" placeholder="You may briefly describe what you'd like to discuss. This is completely optional and confidential."></textarea>
+                    </div>
+
+                    <div class="alert alert-purple border-0 small mb-4">
+                        <i class="fa-solid fa-lock me-2"></i><strong>100% Confidential:</strong> Your session details and notes are visible only to assigned counselors and the Executive Director.
+                    </div>
+
+                    <button type="submit" class="btn btn-purple btn-lg w-100">
+                        <i class="fa-solid fa-paper-plane me-2"></i>Submit Session Request
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card card-custom border-0 shadow-sm p-4 mb-4 bg-light-purple">
+                <h5 class="text-purple fw-bold mb-3"><i class="fa-solid fa-circle-question me-2 text-red"></i>How It Works</h5>
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex gap-3">
+                        <div class="rounded-circle bg-purple text-white d-flex align-items-center justify-content-center fw-bold" style="width:32px;height:32px;flex-shrink:0;">1</div>
+                        <div><strong class="text-purple">Submit Request</strong><br><small class="text-muted">Fill in the form with your preferred time</small></div>
+                    </div>
+                    <div class="d-flex gap-3">
+                        <div class="rounded-circle bg-purple text-white d-flex align-items-center justify-content-center fw-bold" style="width:32px;height:32px;flex-shrink:0;">2</div>
+                        <div><strong class="text-purple">Admin Review</strong><br><small class="text-muted">Our counseling team reviews your request</small></div>
+                    </div>
+                    <div class="d-flex gap-3">
+                        <div class="rounded-circle bg-purple text-white d-flex align-items-center justify-content-center fw-bold" style="width:32px;height:32px;flex-shrink:0;">3</div>
+                        <div><strong class="text-purple">Confirmation</strong><br><small class="text-muted">You'll be contacted by phone to confirm</small></div>
+                    </div>
+                    <div class="d-flex gap-3">
+                        <div class="rounded-circle bg-purple text-white d-flex align-items-center justify-content-center fw-bold" style="width:32px;height:32px;flex-shrink:0;">4</div>
+                        <div><strong class="text-purple">Attend Session</strong><br><small class="text-muted">In-person at our offices or via video call</small></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-custom border-0 shadow-sm p-4">
+                <h6 class="text-purple fw-bold mb-2"><i class="fa-solid fa-user-shield text-red me-1"></i>Need Anonymous Help?</h6>
+                <p class="text-muted small mb-2">You can access our anonymous support channel without creating an account.</p>
+                <a href="{% url 'anonymous_chat' %}" class="btn btn-outline-danger btn-sm w-100"><i class="fa-solid fa-mask me-1"></i> Anonymous Support</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

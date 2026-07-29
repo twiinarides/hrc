@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Donate - {{ site.site_name }}{% endblock %}
+
+{% block content %}
+<div class="bg-light-purple py-5">
+    <div class="container text-center">
+        <h1 class="text-purple display-4">Support Hope Reception Centre</h1>
+        <p class="lead text-muted">Your financial support enables us to provide care, counseling, food, and education for vulnerable children.</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row g-5">
+        <div class="col-lg-7">
+            <h2 class="text-purple mb-4">Payment Methods</h2>
+
+            <!-- Mobile Money -->
+            <div class="card card-custom p-4 mb-4 border-start border-4 border-warning">
+                <h4 class="text-purple mb-3"><i class="fa-solid fa-mobile-screen-button text-warning me-2"></i>Mobile Money (Uganda)</h4>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded">
+                            <h6 class="text-purple mb-1">MTN Mobile Money</h6>
+                            <p class="fw-bold mb-0 text-dark">{{ site.mtn_mobile_money }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded">
+                            <h6 class="text-red mb-1">Airtel Money</h6>
+                            <p class="fw-bold mb-0 text-dark">{{ site.airtel_money }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bank Transfer -->
+            <div class="card card-custom p-4 mb-4 border-start border-4 border-purple">
+                <h4 class="text-purple mb-3"><i class="fa-solid fa-building-columns text-purple me-2"></i>Bank Transfer</h4>
+                <pre class="bg-light p-3 rounded text-dark font-monospace mb-0" style="white-space: pre-wrap;">{{ site.bank_details }}</pre>
+            </div>
+
+            <!-- Online / PayPal -->
+            <div class="card card-custom p-4 border-start border-4 border-red">
+                <h4 class="text-red mb-2"><i class="fa-brands fa-paypal text-red me-2"></i>PayPal & International Cards</h4>
+                <p class="text-muted small mb-3">For international donors wishing to contribute via Credit/Debit card or PayPal.</p>
+                <button class="btn btn-red disabled" disabled>PayPal Integration Ready</button>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card card-custom p-4 shadow-sm">
+                <h3 class="text-purple mb-3">Record Your Donation</h3>
+                <p class="small text-muted mb-4">If you have sent money via Mobile Money or Bank Transfer, please fill this form so our Treasurer (Janiffer Agaba) can record and acknowledge it.</p>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label font-semibold">Your Name</label>
+                        <input type="text" name="donor_name" class="form-control" placeholder="e.g. John Doe (or leave blank for Anonymous)">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label font-semibold">Phone Number</label>
+                        <input type="text" name="phone" class="form-control" placeholder="07XX XXX XXX">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label font-semibold">Amount (UGX)</label>
+                        <input type="number" name="amount" class="form-control" placeholder="e.g. 50000" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label font-semibold">Payment Method Used</label>
+                        <select name="payment_method" class="form-select" required>
+                            <option value="mtn">MTN Mobile Money</option>
+                            <option value="airtel">Airtel Money</option>
+                            <option value="bank">Bank Transfer</option>
+                            <option value="paypal">PayPal / Card</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label font-semibold">Transaction Reference / Code</label>
+                        <input type="text" name="transaction_reference" class="form-control" placeholder="e.g. Mobile Money SMS Reference Code">
+                    </div>
+                    <button type="submit" class="btn btn-purple w-100 btn-lg">Submit Donation Record</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

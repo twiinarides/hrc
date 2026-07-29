@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Stories of Hope — {{ site.site_name }}{% endblock %}
+
+{% block og_tags %}
+<meta property="og:title" content="Stories of Hope — Hope Reception Centre">
+<meta property="og:description" content="Read real stories of transformation and hope from people whose lives have been touched by Hope Reception Centre.">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Hope Reception Centre">
+{% endblock %}
+
+{% block content %}
+<div class="py-5" style="background: linear-gradient(135deg, #6B2D8B 0%, #3d1455 100%);">
+    <div class="container text-center text-white">
+        <span class="badge bg-red px-3 py-2 mb-3 fs-6"><i class="fa-solid fa-heart me-1"></i> Testimonials</span>
+        <h1 class="display-4 fw-bold">Stories of Hope</h1>
+        <p class="lead text-white-75">Real stories from the people whose lives have been touched by Hope Reception Centre.</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h3 class="text-purple fw-bold mb-0"><i class="fa-solid fa-book-open me-2 text-red"></i>Community Stories</h3>
+        <a href="{% url 'submit_story' %}" class="btn btn-purple"><i class="fa-solid fa-pen me-1"></i> Share Your Story</a>
+    </div>
+
+    <div class="row g-4">
+        {% for story in stories %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card card-custom border-0 shadow-sm h-100 hover-lift overflow-hidden d-flex flex-column">
+                {% if story.photo %}
+                <img src="{{ story.photo.url }}" class="card-img-top" alt="{{ story.title }}" style="height:220px;object-fit:cover;">
+                {% else %}
+                <div class="bg-light-purple d-flex align-items-center justify-content-center" style="height:200px;">
+                    <i class="fa-solid fa-quote-left fs-1 text-purple"></i>
+                </div>
+                {% endif %}
+                <div class="card-body p-4 d-flex flex-column flex-grow-1">
+                    <h5 class="text-purple fw-bold mb-2">{{ story.title }}</h5>
+                    <p class="text-muted small flex-grow-1 mb-3">"{{ story.content|linebreaksbr }}"</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-auto">
+                        <span class="text-purple small fw-semibold"><i class="fa-solid fa-user me-1 text-red"></i>{{ story.author_alias }}</span>
+                        <small class="text-muted">{{ story.created_at|date:"M d, Y" }}</small>
+                    </div>
+
+                    <!-- Social Sharing Buttons for Story -->
+                    <div class="mt-3 pt-2 bg-light-purple rounded-3 p-2 text-center">
+                        <small class="text-purple fw-bold d-block mb-2"><i class="fa-solid fa-share-nodes me-1 text-red"></i>Share Story:</small>
+                        <div class="d-flex justify-content-center gap-2 flex-wrap">
+                            <a href="https://wa.me/?text={{ story.title|urlencode }}%20-%20Story%20of%20Hope:%20{{ request.build_absolute_uri|urlencode }}" target="_blank" class="btn btn-success btn-sm px-2 py-1" style="font-size:12px;" title="Share on WhatsApp">
+                                <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                            </a>
+                            <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri|urlencode }}" target="_blank" class="btn btn-primary btn-sm px-2 py-1" style="font-size:12px;" title="Share on Facebook">
+                                <i class="fa-brands fa-facebook"></i> Facebook
+                            </a>
+                            <a href="https://twitter.com/intent/tweet?url={{ request.build_absolute_uri|urlencode }}&text={{ story.title|urlencode }}" target="_blank" class="btn btn-dark btn-sm px-2 py-1" style="font-size:12px;" title="Share on X">
+                                <i class="fa-brands fa-x-twitter"></i> X
+                            </a>
+                            <button onclick="navigator.clipboard.writeText('{{ request.build_absolute_uri }}');this.innerHTML='<i class=\'fa-solid fa-check\'></i> Copied!';" class="btn btn-outline-purple btn-sm px-2 py-1" style="font-size:12px;">
+                                <i class="fa-solid fa-link"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="fa-solid fa-heart-circle-plus fs-1 text-muted mb-3 d-block"></i>
+            <p class="text-muted mb-3">No stories shared yet. Be the first to share your experience!</p>
+            <a href="{% url 'submit_story' %}" class="btn btn-purple"><i class="fa-solid fa-pen me-1"></i> Share Your Story</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
