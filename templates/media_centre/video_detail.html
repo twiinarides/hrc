@@ -28,19 +28,29 @@
             </div>
             {% endif %}
 
-            <!-- Video Player Box -->
+            <!-- Video / Live Broadcast Container -->
             <div class="rounded-4 overflow-hidden shadow-lg mb-4 bg-black position-relative">
                 {% if video.is_live and not video.youtube_url and not video.video_file %}
-                <!-- WebCam / In-App Camera Broadcast Player -->
+                
                 <div id="liveCameraContainer" class="ratio ratio-16x9 bg-dark d-flex align-items-center justify-content-center">
                     <video id="liveWebcamVideo" autoplay playsinline controls class="w-100 h-100"></video>
                 </div>
+
                 {% if user.is_authenticated and user.is_staff or user.role != 'client' %}
-                <div class="p-3 bg-dark text-white text-center border-top">
-                    <button id="startCamBtn" onclick="startBroadcasting()" class="btn btn-danger btn-sm me-2">
-                        <i class="fa-solid fa-camera me-1"></i> Turn On My Camera & Broadcast Live
+                <!-- Admin Only Live Broadcast Controls -->
+                <div class="p-3 bg-dark text-white text-center border-top d-flex justify-content-center align-items-center gap-2 flex-wrap">
+                    <span class="badge bg-red me-2"><i class="fa-solid fa-shield-halved me-1"></i> Admin Host Controls</span>
+                    <button id="startCamBtn" onclick="startAdminBroadcasting()" class="btn btn-danger btn-sm">
+                        <i class="fa-solid fa-video me-1"></i> Start Camera Broadcast
                     </button>
-                    <small class="text-white-50">Admin Live Broadcast Mode</small>
+                    <button id="stopCamBtn" onclick="stopAdminBroadcasting()" class="btn btn-secondary btn-sm d-none">
+                        <i class="fa-solid fa-video-slash me-1"></i> Stop Camera
+                    </button>
+                </div>
+                {% else %}
+                <!-- Visitor Watcher Banner -->
+                <div class="p-3 bg-purple text-white text-center border-top">
+                    <i class="fa-solid fa-eye me-2"></i> <strong>Watcher Mode:</strong> You are tuned in to Hope Reception Centre's Live Session.
                 </div>
                 {% endif %}
 
@@ -116,23 +126,38 @@
 </div>
 
 <script>
-function startBroadcasting() {
+let localStream = null;
+
+function startAdminBroadcasting() {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             .then(function(stream) {
+                localStream = stream;
                 const videoElem = document.getElementById('liveWebcamVideo');
                 if (videoElem) {
                     videoElem.srcObject = stream;
                     videoElem.play();
-                    document.getElementById('startCamBtn').innerHTML = '<i class="fa-solid fa-circle text-danger me-1"></i> Camera Broadcasting Active';
+                    document.getElementById('startCamBtn').classList.add('d-none');
+                    document.getElementById('stopCamBtn').classList.remove('d-none');
                 }
             })
             .catch(function(err) {
                 alert('Could not access camera/microphone: ' + err.message);
             });
     } else {
-        alert('Camera access is not supported on this browser.');
+        alert('Camera access is not supported on this device/browser.');
     }
+}
+
+function stopAdminBroadcasting() {
+    if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+    }
+    const videoElem = document.getElementById('liveWebcamVideo');
+    if (videoElem) videoElem.srcObject = null;
+    document.getElementById('startCamBtn').classList.remove('d-none');
+    document.getElementById('stopCamBtn').classList.add('d-none');
 }
 </script>
 
