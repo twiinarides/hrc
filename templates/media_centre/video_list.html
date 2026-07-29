@@ -1,38 +1,48 @@
 {% extends 'base.html' %}
 
-{% block title %}Videos & Live Sessions — {{ site.site_name }}{% endblock %}
+{% block title %}Videos & Live Streaming — {{ site.site_name }}{% endblock %}
 
 {% block content %}
 <div class="py-5" style="background: linear-gradient(135deg, #6B2D8B 0%, #3d1455 100%);">
     <div class="container text-center text-white">
         <span class="badge bg-red px-3 py-2 mb-3 fs-6"><i class="fa-solid fa-video me-1"></i> Media Centre</span>
-        <h1 class="display-4 fw-bold">Videos & Live Sessions</h1>
-        <p class="lead text-white-75">Watch recorded sessions, interviews, and join live events.</p>
+        <h1 class="display-4 fw-bold">Videos & Live Streams</h1>
+        <p class="lead text-white-75">Watch live prayer sessions, counseling broadcasts, and recorded video archives.</p>
+
+        {% if user.is_authenticated and user.is_staff or user.role != 'client' %}
+        <div class="mt-3">
+            <a href="/admin/media_centre/video/add/" target="_blank" class="btn btn-red btn-lg shadow">
+                <i class="fa-solid fa-broadcast-tower me-2"></i> Start / Schedule Live Stream (Admin)
+            </a>
+        </div>
+        {% endif %}
     </div>
 </div>
 
 <div class="container py-5">
     {% if live_videos %}
     <div class="mb-5">
-        <h3 class="text-red fw-bold mb-4"><i class="fa-solid fa-tower-broadcast me-2"></i>Live Now</h3>
+        <h3 class="text-red fw-bold mb-4"><i class="fa-solid fa-tower-broadcast me-2"></i>Live Streaming Now</h3>
         <div class="row g-4">
             {% for video in live_videos %}
             <div class="col-lg-6">
                 <div class="card border-danger border-2 shadow-lg rounded-4 overflow-hidden hover-lift">
                     {% if video.thumbnail %}
                     <div class="position-relative">
-                        <img src="{{ video.thumbnail.url }}" class="card-img-top" alt="{{ video.title }}" style="height:250px;object-fit:cover;">
+                        <img src="{{ video.thumbnail.url }}" class="card-img-top" alt="{{ video.title }}" style="height:260px;object-fit:cover;">
                         <div class="position-absolute top-0 start-0 m-3">
-                            <span class="badge bg-danger px-3 py-2 pulse-animation"><i class="fa-solid fa-circle me-1" style="font-size:8px;"></i> LIVE</span>
+                            <span class="badge bg-danger px-3 py-2 pulse-animation fs-6"><i class="fa-solid fa-circle me-1" style="font-size:10px;"></i> LIVE BROADCAST</span>
                         </div>
                     </div>
                     {% endif %}
                     <div class="card-body p-4">
                         <h4 class="text-purple fw-bold">{{ video.title }}</h4>
                         <p class="text-muted">{{ video.description|truncatewords:20 }}</p>
-                        <a href="{% url 'video_detail' video.slug %}" class="btn btn-red btn-lg w-100">
-                            <i class="fa-solid fa-play me-1"></i> Join Live Session
-                        </a>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'video_detail' video.slug %}" class="btn btn-red btn-lg flex-grow-1">
+                                <i class="fa-solid fa-play me-1"></i> Watch Live Stream
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -41,11 +51,11 @@
     </div>
     {% endif %}
 
-    <h3 class="text-purple fw-bold mb-4"><i class="fa-solid fa-film me-2 text-red"></i>Recorded Videos</h3>
+    <h3 class="text-purple fw-bold mb-4"><i class="fa-solid fa-film me-2 text-red"></i>Video Library</h3>
     <div class="row g-4">
         {% for video in videos %}
         <div class="col-md-6 col-lg-4">
-            <div class="card card-custom border-0 shadow-sm h-100 overflow-hidden hover-lift">
+            <div class="card card-custom border-0 shadow-sm h-100 overflow-hidden hover-lift d-flex flex-column">
                 {% if video.thumbnail %}
                 <div class="position-relative">
                     <img src="{{ video.thumbnail.url }}" class="card-img-top" alt="{{ video.title }}" style="height:200px;object-fit:cover;">
@@ -62,16 +72,31 @@
                     </div>
                 </div>
                 {% endif %}
-                <div class="card-body p-4">
+                <div class="card-body p-4 d-flex flex-column flex-grow-1">
                     <div class="d-flex gap-2 mb-2">
-                        <span class="badge bg-light text-muted small"><i class="fa-solid fa-eye me-1"></i>{{ video.views_count }}</span>
-                        {% if video.requires_login %}<span class="badge bg-light text-purple small"><i class="fa-solid fa-lock me-1"></i>Login Required</span>{% endif %}
+                        <span class="badge bg-light text-muted small"><i class="fa-solid fa-eye me-1"></i>{{ video.views_count }} views</span>
+                        {% if video.requires_login %}<span class="badge bg-light text-purple small"><i class="fa-solid fa-lock me-1"></i>Members Only</span>{% endif %}
                     </div>
                     <h5 class="text-purple fw-bold">{{ video.title }}</h5>
-                    <p class="text-muted small">{{ video.description|truncatewords:15|default:"" }}</p>
-                    <a href="{% url 'video_detail' video.slug %}" class="btn btn-outline-purple btn-sm">
-                        <i class="fa-solid fa-play me-1"></i> Watch Now
-                    </a>
+                    <p class="text-muted small flex-grow-1">{{ video.description|truncatewords:15|default:"" }}</p>
+
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-auto">
+                        <a href="{% url 'video_detail' video.slug %}" class="btn btn-outline-purple btn-sm">
+                            <i class="fa-solid fa-play me-1"></i> Watch Video
+                        </a>
+
+                        <!-- Social Share Dropdown for Video -->
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown">
+                                <i class="fa-solid fa-share-nodes text-purple"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow small">
+                                <li><a class="dropdown-item text-success" href="https://wa.me/?text={{ video.title|urlencode }}%20{{ request.scheme }}://{{ request.get_host }}/videos/{{ video.slug }}/" target="_blank"><i class="fa-brands fa-whatsapp me-2"></i>WhatsApp</a></li>
+                                <li><a class="dropdown-item text-primary" href="https://www.facebook.com/sharer/sharer.php?u={{ request.scheme }}://{{ request.get_host }}/videos/{{ video.slug }}/" target="_blank"><i class="fa-brands fa-facebook me-2"></i>Facebook</a></li>
+                                <li><a class="dropdown-item text-dark" href="https://twitter.com/intent/tweet?url={{ request.scheme }}://{{ request.get_host }}/videos/{{ video.slug }}/&text={{ video.title|urlencode }}" target="_blank"><i class="fa-brands fa-x-twitter me-2"></i>X (Twitter)</a></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

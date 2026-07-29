@@ -1,9 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.core.mail import send_mail
-from django.conf import settings
 from .models import CounselingSession, AnonymousSupportThread, AnonymousMessage
+from core.notifications import notify_admin
 
 
 @login_required
@@ -20,41 +19,15 @@ def book_session(request):
             notes=notes
         )
 
-        # ─── Admin Email Notification ─────────────────────────────────────────
-        try:
-            type_display = dict(CounselingSession.SESSION_TYPES).get(session_type, session_type)
-            subject = f"[HRC] New Counseling Request — {request.user.username} ({type_display})"
-            message_body = f"""
-A new counseling session has been booked at Hope Reception Centre.
+        type_display = dict(CounselingSession.SESSION_TYPES).get(session_type, session_type)
 
-═══════════════════════════════════════
-COUNSELING SESSION REQUEST
-═══════════════════════════════════════
-Client Username:  {request.user.username}
-Session Type:     {type_display}
-Preferred Date:   {date_str}
-Submitted:        {session.created_at.strftime('%d %B %Y at %H:%M EAT')}
-
-NOTES / REASON:
-{notes if notes else 'No additional notes provided.'}
-
-═══════════════════════════════════════
-To manage this session, log in to the admin console:
-https://hopereceptioncenter.org/admin/counseling/counselingsession/
-Or visit your Admin Dashboard:
-https://hopereceptioncenter.org/dashboard/stats/
-═══════════════════════════════════════
-This is an automated notification from the Hope Reception Centre Web System.
-"""
-            send_mail(
-                subject=subject,
-                message=message_body,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=settings.ADMIN_NOTIFICATION_EMAILS,
-                fail_silently=True,
-            )
-        except Exception as e:
-            print(f"[EMAIL ERROR] Failed to send session notification: {e}")
+        # Notify Admin in-app and via Email
+        notify_admin(
+            notification_type='session',
+            title=f"New Counseling Session Request — {request.user.username}",
+            message=f"Client: {request.user.username}\nSession Type: {type_display}\nPreferred Date: {date_str}\nNotes: {notes}",
+            link=f"/admin/counseling/counselingsession/{session.id}/change/"
+        )
 
         messages.success(request, "Your counseling session request has been submitted! Our team will get in touch with you shortly.")
         return redirect('my_sessions')
@@ -69,37 +42,48 @@ def my_sessions(request):
 
 
 def anonymous_chat(request):
-    token = request.GET.get('token')
+    token = request.GET.get('token', '').strip().upper()
+    search_error = None
     thread = None
+
     if token:
-        thread = AnonymousSupportThread.objects.filter(token=token).first()
+        # Search exact or case-insensitive prefix match
+        thread = AnonymousSupportThread.objects.filter(token__iexact=token).first()
+        if not thread:
+            # Try searching by token containing or stripped
+            thread = AnonymousSupportThread.objects.filter(token__icontains=token).first()
+
+        if not thread:
+            search_error = f"No anonymous thread found matching token '{token}'. Please check your token and try again."
 
     if request.method == 'POST':
-        content = request.POST.get('content')
+        content = request.POST.get('content', '').strip()
         category = request.POST.get('category', 'General Support')
 
         if not thread:
             thread = AnonymousSupportThread.objects.create(category=category)
 
-        AnonymousMessage.objects.create(
-            thread=thread,
-            sender_is_counselor=False,
-            content=content
-        )
-
-        # Notify admins of new anonymous message
-        try:
-            send_mail(
-                subject=f"[HRC] New Anonymous Support Message — Thread {str(thread.token)[:8]}",
-                message=f"A new anonymous support message has been submitted.\n\nCategory: {category}\nThread Token: {thread.token}\nMessage: {content}\n\nRespond at: https://hopereceptioncenter.org/admin/counseling/anonymoussupportthread/",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=settings.ADMIN_NOTIFICATION_EMAILS,
-                fail_silently=True,
+        if content:
+            AnonymousMessage.objects.create(
+                thread=thread,
+                sender_is_counselor=False,
+                content=content
             )
-        except Exception:
-            pass
+
+            # Notify Admin in-app & Email
+            notify_admin(
+                notification_type='anonymous',
+                title=f"New Anonymous Support Message (Token: {thread.token})",
+                message=f"Category: {category}\nToken: {thread.token}\nMessage: {content}",
+                link=f"/admin/counseling/anonymoussupportthread/{thread.id}/change/"
+            )
 
         return redirect(f"/counseling/anonymous/?token={thread.token}")
 
     messages_list = thread.messages.order_by('timestamp') if thread else []
-    return render(request, 'counseling/anonymous.html', {'thread': thread, 'messages_list': messages_list})
+    return render(request, 'counseling/anonymous.html', {
+        'thread': thread,
+        'messages_list': messages_list,
+        'search_error': search_error,
+        'search_token': token,
+    })

@@ -1,113 +1,88 @@
-{% extends "admin/base.html" %}
-
-{% block title %}{{ title }} | Hope Reception Centre Admin{% endblock %}
+{% extends "admin/base_site.html" %}
+{% load static %}
 
 {% block branding %}
-<h1 id="site-name"><a href="{% url 'admin:index' %}">Hope Reception Centre</a></h1>
+<div id="site-name" style="display:flex;align-items:center;gap:10px;">
+    <a href="{% url 'admin:index' %}" style="color:#ffffff;font-size:18px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:8px;">
+        <span style="background:#C41230;padding:4px 10px;border-radius:4px;font-size:14px;">HRC</span>
+        Hope Reception Centre — Admin Console
+    </a>
+</div>
 {% endblock %}
 
-{% block nav-global %}{% endblock %}
+{% block userlinks %}
+<a href="{% url 'admin_stats_dashboard' %}" style="color:#FFD700;font-weight:bold;margin-right:15px;"><i class="fa-solid fa-gauge"></i> Executive Dashboard</a>
+<a href="{% url 'home' %}" target="_blank" style="color:#ffffff;margin-right:15px;">View Main Website →</a>
+{{ block.super }}
+{% endblock %}
 
-{% block extrastyle %}
+{% block extrahead %}
+{{ block.super }}
 <style>
-    /* Custom Admin Theme for Hope Reception Centre */
-    :root {
-        --primary: #6B2D8B;       /* Royal Purple */
-        --secondary: #C41230;     /* Crimson Red */
-        --header-color: #ffffff;
-        --header-bg: #6B2D8B;
-        --header-link-color: #ffffff;
-        
-        --link-hover-color: #C41230;
-        --button-bg: #6B2D8B;
-        --button-hover-bg: #542270;
-        --default-button-bg: #C41230;
-        --default-button-hover-bg: #9E0E26;
-        
-        --selected-bg: #F5EDFA;
-        --selected-row: #F5EDFA;
-    }
+/* Custom Django Admin Color Palette Matching HRC Brand */
+:root {
+    --primary: #6B2D8B !important;
+    --secondary: #C41230 !important;
+    --accent: #3d1455 !important;
+    --header-bg: #3d1455 !important;
+    --header-color: #ffffff !important;
+    --link-color: #6B2D8B !important;
+}
 
-    /* Header */
-    #header {
-        background-color: var(--header-bg);
-        color: var(--header-color);
-    }
-    
-    #header a:link, #header a:visited {
-        color: var(--header-link-color);
-    }
-    
-    #header a:hover {
-        color: #F5EDFA;
-    }
+#header {
+    background: linear-gradient(135deg, #3d1455 0%, #6B2D8B 60%, #C41230 100%) !important;
+    color: #ffffff !important;
+    padding: 12px 20px !important;
+}
 
-    /* Links */
-    a:link, a:visited {
-        color: var(--primary);
-    }
-    
-    a:hover {
-        color: var(--link-hover-color);
-    }
+#header a:link, #header a:visited {
+    color: #ffffff !important;
+}
 
-    /* Buttons */
-    .button, input[type=submit], input[type=button], .submit-row input, a.button {
-        background: var(--button-bg);
-        color: white;
-    }
-    
-    .button:hover, input[type=submit]:hover, input[type=button]:hover {
-        background: var(--button-hover-bg);
-    }
+div.breadcrumbs {
+    background: #501d68 !important;
+    color: #e0d0eb !important;
+}
 
-    .button.default, input[type=submit].default, .submit-row input.default {
-        background: var(--default-button-bg);
-    }
-    
-    .button.default:hover, input[type=submit].default:hover {
-        background: var(--default-button-hover-bg);
-    }
+div.breadcrumbs a {
+    color: #ffffff !important;
+}
 
-    /* Modules (Tables) */
-    div.breadcrumbs {
-        background: #542270;
-    }
-    
-    .module h2, .module caption, .inline-group h2 {
-        background: var(--primary);
-        color: white;
-    }
-    
-    .viewlink, .addlink, .changelink {
-        color: var(--primary);
-    }
+.module h2, .module caption, .inline-group h2 {
+    background: #6B2D8B !important;
+    color: #ffffff !important;
+}
 
-    /* Object tools */
-    .object-tools a.addlink {
-        background-color: var(--primary);
-    }
-    .object-tools a.addlink:hover {
-        background-color: var(--button-hover-bg);
-    }
-    
-    /* Login Form */
-    .login #header {
-        background-color: var(--primary);
-        justify-content: center;
-    }
-    .login #header h1 {
-        text-align: center;
-        width: 100%;
-        font-size: 24px;
-    }
-    .login .submit-row input {
-        background: var(--secondary);
-    }
-    
-    /* Checkbox & Selection */
-    tr.selected {
-        background-color: var(--selected-bg);
-    }
+.button, input[type=submit], input[type=button], .submit-row input, a.button {
+    background: #6B2D8B !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 4px !important;
+    padding: 8px 16px !important;
+
+}
+
+.button.default, input[type=submit].default {
+    background: #C41230 !important;
+}
+
+.button:hover, input[type=submit]:hover {
+    opacity: 0.9 !important;
+}
+
+#changelist table thead th {
+    background: #f4ecf7 !important;
+    color: #6B2D8B !important;
+}
+
+.object-tools a:link, .object-tools a:visited {
+    background: #6B2D8B !important;
+    color: #ffffff !important;
+}
+
+tr.alt {
+    background: #faf6fc !important;
+}
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 {% endblock %}

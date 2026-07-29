@@ -48,16 +48,13 @@ def contact_view(request):
         subject_in = request.POST.get('subject', 'Contact Form Message')
         message_in = request.POST.get('message', '')
 
-        try:
-            send_mail(
-                subject=f"[HRC Contact] {subject_in} — from {name}",
-                message=f"Name: {name}\nEmail: {email_from}\n\nMessage:\n{message_in}",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=settings.ADMIN_NOTIFICATION_EMAILS,
-                fail_silently=True,
-            )
-        except Exception:
-            pass
+        from core.notifications import notify_admin
+        notify_admin(
+            notification_type='contact',
+            title=f"Contact Message: {subject_in} (from {name})",
+            message=f"Name: {name}\nEmail: {email_from}\n\nMessage:\n{message_in}",
+            link="/admin/"
+        )
 
         return render(request, 'core/contact.html', {'submitted': True})
     return render(request, 'core/contact.html')

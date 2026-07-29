@@ -5,9 +5,13 @@ from django.contrib import messages
 from .models import User
 from programs.models import ProgramApplication
 from counseling.models import CounselingSession
+from allauth.socialaccount.models import SocialApp
 
 
 def register_view(request):
+    if request.user.is_authenticated:
+        return redirect('home')
+
     if request.method == 'POST':
         u_name = request.POST.get('username', '').strip()
         email = request.POST.get('email', '').strip()
@@ -27,16 +31,19 @@ def register_view(request):
             messages.error(request, "An account with that email already exists.")
             return render(request, 'accounts/register.html')
 
-        user = User.objects.create_user(
-            username=u_name,
-            password=pass1,
-            email=email,
-            phone_number=phone,
-        )
-        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-        messages.success(request, f"Welcome to Hope Reception Centre, {user.username}! Your account has been created.")
-        next_url = request.GET.get('next', 'home')
-        return redirect(next_url)
+        try:
+            user = User.objects.create_user(
+                username=u_name,
+                password=pass1,
+                email=email,
+                phone_number=phone,
+            )
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            messages.success(request, f"Welcome to Hope Reception Centre, {user.username}! Your account has been created.")
+            next_url = request.GET.get('next', 'home')
+            return redirect(next_url)
+        except Exception as e:
+            messages.error(request, f"Registration failed: {str(e)}")
 
     return render(request, 'accounts/register.html')
 
@@ -52,7 +59,10 @@ def login_view(request):
         if user is not None:
             login(request, user)
             messages.success(request, f"Welcome back, {user.username}!")
-            return redirect(request.GET.get('next', 'home'))
+            next_url = request.GET.get('next', '')
+            if next_url:
+                return redirect(next_url)
+            return redirect('home')
         else:
             messages.error(request, "Invalid username or password. Please try again.")
 

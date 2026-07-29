@@ -1,10 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
-from django.conf import settings
 from .models import Program, ProgramApplication
+from core.notifications import notify_admin
 
 
 def program_list(request):
@@ -52,45 +50,13 @@ def apply_program(request, slug):
             additional_info=additional_info,
         )
 
-        # ─── Send Email Notification to Admins ───────────────────────────────
-        try:
-            subject = f"[HRC] New Application: {program.title} — {full_name}"
-            message_body = f"""
-A new program application has been submitted at Hope Reception Centre.
-
-═══════════════════════════════════════
-PROGRAM:        {program.title}
-═══════════════════════════════════════
-Applicant Name: {full_name}
-Username:       {request.user.username}
-Phone:          {phone_number}
-Age:            {age if age else 'Not provided'}
-Submitted:      {application.submitted_at.strftime('%d %B %Y at %H:%M EAT')}
-
-REASON FOR APPLICATION:
-{reason}
-
-ADDITIONAL INFORMATION:
-{additional_info if additional_info else 'None provided'}
-
-═══════════════════════════════════════
-To review this application, log in to the admin console:
-https://hopereceptioncenter.org/admin/programs/programapplication/
-Or visit your Admin Dashboard:
-https://hopereceptioncenter.org/dashboard/stats/
-═══════════════════════════════════════
-This is an automated notification from Hope Reception Centre Web System.
-"""
-            send_mail(
-                subject=subject,
-                message=message_body,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=settings.ADMIN_NOTIFICATION_EMAILS,
-                fail_silently=True,
-            )
-        except Exception as e:
-            # Don't crash if email fails — just log it
-            print(f"[EMAIL ERROR] Failed to send notification: {e}")
+        # Notify Admin in-app & Email
+        notify_admin(
+            notification_type='application',
+            title=f"New Program Application: {program.title} — {full_name}",
+            message=f"Program: {program.title}\nApplicant: {full_name}\nPhone: {phone_number}\nAge: {age}\nReason: {reason}",
+            link=f"/admin/programs/programapplication/{application.id}/change/"
+        )
 
         messages.success(request, f"Your application for '{program.title}' has been submitted! Our team will review it and reach out to you via phone shortly.")
         return redirect('my_applications')

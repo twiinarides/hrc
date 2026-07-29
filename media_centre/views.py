@@ -49,7 +49,7 @@ def submit_story(request):
         photo = request.FILES.get('photo')
         consent = request.POST.get('has_user_consent') == 'on'
 
-        UserStory.objects.create(
+        story = UserStory.objects.create(
             title=title,
             author_alias=alias,
             content=content,
@@ -57,6 +57,15 @@ def submit_story(request):
             has_user_consent=consent,
             is_published=False  # Requires admin review
         )
+
+        from core.notifications import notify_admin
+        notify_admin(
+            notification_type='story',
+            title=f"New User Story Submitted: {title}",
+            message=f"Title: {title}\nAuthor Alias: {alias}\nConsent Given: {consent}\nContent: {content}",
+            link=f"/admin/media_centre/userstory/{story.id}/change/"
+        )
+
         messages.success(request, "Thank you for sharing your story! Our team will review it before publishing.")
         return redirect('stories_list')
 
