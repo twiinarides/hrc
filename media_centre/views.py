@@ -102,26 +102,37 @@ def album_detail(request, slug):
 
 
 # ─── WebRTC Live Streaming Signaling API ─────────────────────────────────────
-# These endpoints allow admin and viewers to exchange WebRTC SDP + ICE data
-# enabling true peer-to-peer live video streaming directly from the browser.
 
 @csrf_exempt
 @require_POST
 def rtc_broadcaster_offer(request, slug):
-    """Admin posts their WebRTC SDP offer to start broadcasting."""
+    """Admin posts their WebRTC SDP offer targeted at a specific viewer."""
     if not request.user.is_staff:
         return JsonResponse({'error': 'Forbidden'}, status=403)
 
     video = get_object_or_404(Video, slug=slug)
     data = json.loads(request.body)
+    
+    # If no viewer_token, it's just the 'start broadcast' ping
+    viewer_token = data.get('viewer_token')
     offer_sdp = data.get('offer')
 
     signal, _ = LiveStreamSignal.objects.get_or_create(video=video)
-    signal.offer_sdp = json.dumps(offer_sdp)
-    signal.is_broadcasting = True
-    # Clear old viewer connections when a new broadcast starts
-    signal.viewers.all().delete()
-    signal.save()
+    
+    if not viewer_token:
+        # Just starting the broadcast
+        signal.is_broadcasting = True
+        signal.viewers.all().delete()
+        signal.save()
+        return JsonResponse({'status': 'broadcast_started'})
+    
+    # Offering to a specific viewer
+    try:
+        conn = signal.viewers.get(viewer_token=viewer_token)
+        conn.offer_sdp = json.dumps(offer_sdp)
+        conn.save(update_fields=['offer_sdp', 'updated_at'])
+    except ViewerConnection.DoesNotExist:
+        pass
 
     return JsonResponse({'status': 'offer_saved'})
 
@@ -139,8 +150,7 @@ def rtc_broadcaster_ice(request, slug):
     candidate = data.get('candidate')
 
     try:
-        signal = video.stream_signal
-        conn = signal.viewers.get(viewer_token=viewer_token)
+        conn = video.stream_signal.viewers.get(viewer_token=viewer_token)
         existing = json.loads(conn.broadcaster_ice)
         existing.append(candidate)
         conn.broadcaster_ice = json.dumps(existing)
@@ -162,7 +172,6 @@ def rtc_broadcaster_stop(request, slug):
     try:
         signal = video.stream_signal
         signal.is_broadcasting = False
-        signal.offer_sdp = None
         signal.viewers.all().delete()
         signal.save()
     except LiveStreamSignal.DoesNotExist:
@@ -173,15 +182,30 @@ def rtc_broadcaster_stop(request, slug):
 
 @require_GET
 def rtc_poll_offer(request, slug):
-    """Viewer polls to check if admin is broadcasting and gets the SDP offer."""
+    """Viewer polls to check if admin is broadcasting and gets THEIR specific SDP offer + Admin ICE."""
     video = get_object_or_404(Video, slug=slug)
+    viewer_token = request.GET.get('viewer_token')
+    
+    if not viewer_token:
+        return JsonResponse({'error': 'No viewer token'}, status=400)
+
     try:
         signal = video.stream_signal
-        if signal.is_broadcasting and signal.offer_sdp:
-            return JsonResponse({
-                'broadcasting': True,
-                'offer': json.loads(signal.offer_sdp),
-            })
+        if not signal.is_broadcasting:
+            return JsonResponse({'broadcasting': False})
+            
+        # Register viewer if they don't exist yet
+        conn, created = ViewerConnection.objects.get_or_create(
+            signal=signal,
+            viewer_token=viewer_token,
+            defaults={'broadcaster_ice': '[]', 'viewer_ice': '[]'}
+        )
+        
+        return JsonResponse({
+            'broadcasting': True,
+            'offer': json.loads(conn.offer_sdp) if conn.offer_sdp else None,
+            'broadcaster_ice': json.loads(conn.broadcaster_ice)
+        })
     except LiveStreamSignal.DoesNotExist:
         pass
 
@@ -191,28 +215,8 @@ def rtc_poll_offer(request, slug):
 @csrf_exempt
 @require_POST
 def rtc_viewer_join(request, slug):
-    """Viewer registers and gets a token + the offer."""
-    video = get_object_or_404(Video, slug=slug)
-    data = json.loads(request.body)
-    viewer_token = data.get('viewer_token', secrets.token_hex(16))
-
-    try:
-        signal = video.stream_signal
-        if not signal.is_broadcasting:
-            return JsonResponse({'error': 'Not broadcasting'}, status=400)
-
-        conn, _ = ViewerConnection.objects.get_or_create(
-            signal=signal,
-            viewer_token=viewer_token,
-            defaults={'broadcaster_ice': '[]', 'viewer_ice': '[]'}
-        )
-
-        return JsonResponse({
-            'viewer_token': viewer_token,
-            'offer': json.loads(signal.offer_sdp) if signal.offer_sdp else None,
-        })
-    except LiveStreamSignal.DoesNotExist:
-        return JsonResponse({'error': 'No active stream'}, status=404)
+    """(Deprecated) Handled implicitly by rtc_poll_offer now."""
+    return JsonResponse({'status': 'ok'})
 
 
 @csrf_exempt
@@ -257,7 +261,7 @@ def rtc_viewer_ice(request, slug):
 
 @require_GET
 def rtc_broadcaster_poll_viewers(request, slug):
-    """Admin polls for new viewer answers + ICE candidates."""
+    """Admin polls for new viewers (to create offers) + viewer answers/ICE."""
     if not request.user.is_staff:
         return JsonResponse({'error': 'Forbidden'}, status=403)
 
@@ -265,9 +269,10 @@ def rtc_broadcaster_poll_viewers(request, slug):
     try:
         signal = video.stream_signal
         viewers = []
-        for conn in signal.viewers.filter(answer_sdp__isnull=False):
+        for conn in signal.viewers.all():
             viewers.append({
                 'viewer_token': conn.viewer_token,
+                'needs_offer': not bool(conn.offer_sdp),
                 'answer': json.loads(conn.answer_sdp) if conn.answer_sdp else None,
                 'ice_candidates': json.loads(conn.viewer_ice),
             })

@@ -112,8 +112,6 @@ class AlbumPhoto(models.Model):
 class LiveStreamSignal(models.Model):
     """Stores WebRTC signaling data so admin can broadcast to viewers."""
     video = models.OneToOneField(Video, on_delete=models.CASCADE, related_name='stream_signal')
-    # Admin (broadcaster) SDP offer
-    offer_sdp = models.TextField(blank=True, null=True)
     is_broadcasting = models.BooleanField(default=False)
     started_at = models.DateTimeField(auto_now=True)
 
@@ -122,10 +120,11 @@ class LiveStreamSignal(models.Model):
 
 
 class ViewerConnection(models.Model):
-    """Each viewer's WebRTC answer + ICE candidates for peer connection with admin."""
+    """Each viewer's WebRTC offer, answer + ICE candidates for peer connection with admin."""
     signal = models.ForeignKey(LiveStreamSignal, on_delete=models.CASCADE, related_name='viewers')
     viewer_token = models.CharField(max_length=64)  # random token per viewer tab
-    answer_sdp = models.TextField(blank=True, null=True)
+    offer_sdp = models.TextField(blank=True, null=True)   # admin -> viewer
+    answer_sdp = models.TextField(blank=True, null=True)  # viewer -> admin
     # ICE candidates stored as JSON arrays
     broadcaster_ice = models.TextField(default='[]')  # admin -> viewer
     viewer_ice = models.TextField(default='[]')       # viewer -> admin

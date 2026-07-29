@@ -155,7 +155,10 @@ let currentFacingMode = 'environment';
 let peerConnections = {}; // For admin: map of viewer_token -> RTCPeerConnection
 let viewerPc = null;      // For viewer: single RTCPeerConnection to admin
 
-// STUN servers to get public IP for WebRTC connection
+// Track processed ICE candidates so we don't re-add them repeatedly
+let processedIceAdmin = {}; // viewer_token -> count
+let processedIceViewer = 0; // count
+
 const rtcConfig = {
     iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
@@ -175,15 +178,22 @@ async function startAdminBroadcasting() {
         localStream = await navigator.mediaDevices.getUserMedia(constraints);
         setupLocalVideo();
         
-        // Start signaling loop for viewers
+        // Notify server that broadcast started
+        await fetch(`/videos/${slug}/rtc/offer/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}) // No viewer token = start broadcast
+        });
+
+        // Poll for viewers wanting to join
         setInterval(pollForViewers, 3000);
 
     } catch (err) {
-        // Fallback if 'environment' camera fails
         if (err.name === 'OverconstrainedError' || err.name === 'NotFoundError') {
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 setupLocalVideo();
+                await fetch(`/videos/${slug}/rtc/offer/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
                 setInterval(pollForViewers, 3000);
             } catch (e2) {
                 alert('Could not access any camera: ' + e2.message);
@@ -194,7 +204,7 @@ async function startAdminBroadcasting() {
     }
 }
 
-async function setupLocalVideo() {
+function setupLocalVideo() {
     videoElem.srcObject = localStream;
     videoElem.muted = true; // Mute locally to avoid feedback
     videoElem.play().catch(e => console.log(e));
@@ -210,25 +220,6 @@ async function setupLocalVideo() {
         badge.textContent = currentFacingMode === 'environment' ? '🎥 Back Camera Live' : '🤳 Front Camera Live';
         badge.className = 'badge bg-danger ms-1';
     }
-
-    // Initialize broadcast signaling
-    await notifyBroadcastStart();
-}
-
-async function notifyBroadcastStart() {
-    // Create a dummy connection just to generate an offer
-    const tempPc = new RTCPeerConnection(rtcConfig);
-    localStream.getTracks().forEach(track => tempPc.addTrack(track, localStream));
-    
-    const offer = await tempPc.createOffer();
-    await tempPc.setLocalDescription(offer);
-
-    // Send offer to server
-    await fetch(`/videos/${slug}/rtc/offer/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ offer: tempPc.localDescription })
-    });
 }
 
 async function pollForViewers() {
@@ -240,12 +231,13 @@ async function pollForViewers() {
         
         for (const viewer of data.viewers) {
             const token = viewer.viewer_token;
-            if (!peerConnections[token]) {
-                // New viewer! Create a peer connection for them
+            
+            // 1. If viewer needs an offer, we must create a connection and generate one for them
+            if (viewer.needs_offer && !peerConnections[token]) {
                 const pc = new RTCPeerConnection(rtcConfig);
                 peerConnections[token] = pc;
+                processedIceAdmin[token] = 0;
 
-                // Send our ICE candidates to the viewer
                 pc.onicecandidate = e => {
                     if (e.candidate) {
                         fetch(`/videos/${slug}/rtc/broadcaster-ice/`, {
@@ -256,32 +248,40 @@ async function pollForViewers() {
                     }
                 };
 
-                // Add our camera tracks
                 localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-                // Generate new offer for this specific viewer connection
                 const offer = await pc.createOffer();
                 await pc.setLocalDescription(offer);
                 
-                // Handle their answer
-                if (viewer.answer) {
+                // Send specific offer back
+                await fetch(`/videos/${slug}/rtc/offer/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ viewer_token: token, offer: pc.localDescription })
+                });
+            }
+
+            // 2. If they have an answer, set it
+            if (viewer.answer && peerConnections[token]) {
+                const pc = peerConnections[token];
+                if (pc.signalingState === "have-local-offer") {
                     await pc.setRemoteDescription(new RTCSessionDescription(viewer.answer));
                 }
             }
 
-            // Process their ICE candidates
+            // 3. Process their ICE candidates
             if (viewer.ice_candidates && peerConnections[token]) {
-                for (const candidate of viewer.ice_candidates) {
+                const pc = peerConnections[token];
+                const startIdx = processedIceAdmin[token] || 0;
+                for (let i = startIdx; i < viewer.ice_candidates.length; i++) {
                     try {
-                        await peerConnections[token].addIceCandidate(new RTCIceCandidate(candidate));
-                    } catch (e) {
-                        // Ignore dupes
-                    }
+                        await pc.addIceCandidate(new RTCIceCandidate(viewer.ice_candidates[i]));
+                    } catch (e) {}
                 }
+                processedIceAdmin[token] = viewer.ice_candidates.length;
             }
         }
         
-        // Update viewer count badge
         const countBadge = document.getElementById('viewerCount');
         if (countBadge) countBadge.textContent = `${data.viewers.length} viewers tuned in`;
 
@@ -292,7 +292,7 @@ async function pollForViewers() {
 
 function flipCamera() {
     currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
-    stopAdminBroadcasting(false); // don't notify server, just restart stream
+    stopAdminBroadcasting(false); 
     setTimeout(startAdminBroadcasting, 500);
 }
 
@@ -315,9 +315,9 @@ async function stopAdminBroadcasting(notifyServer = true) {
         badge.className = 'badge bg-secondary ms-1';
     }
     
-    // Close all peer connections
     Object.values(peerConnections).forEach(pc => pc.close());
     peerConnections = {};
+    processedIceAdmin = {};
 
     if (notifyServer) {
         await fetch(`/videos/${slug}/rtc/stop/`, { method: 'POST' });
@@ -333,24 +333,51 @@ if (!viewerToken) {
     localStorage.setItem('hrc_viewer_token', viewerToken);
 }
 
+// Add an overlay for users to click if autoplay fails (due to browser policy)
+function createPlayOverlay() {
+    let overlay = document.getElementById('playOverlay');
+    if (overlay) return;
+    overlay = document.createElement('div');
+    overlay.id = 'playOverlay';
+    overlay.className = 'position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-dark bg-opacity-75 z-3';
+    overlay.innerHTML = '<button class="btn btn-primary btn-lg rounded-pill"><i class="fa-solid fa-play me-2"></i> Tap to Watch Live</button>';
+    overlay.onclick = () => {
+        videoElem.play();
+        overlay.remove();
+    };
+    videoElem.parentElement.appendChild(overlay);
+}
+
 async function checkStreamStatus() {
-    if (isAdmin) return; // Admins broadcast, they don't consume their own stream via WebRTC
+    if (isAdmin) return; 
 
     try {
-        const res = await fetch(`/videos/${slug}/rtc/offer-poll/`);
+        const res = await fetch(`/videos/${slug}/rtc/offer-poll/?viewer_token=${viewerToken}`);
         const data = await res.json();
 
-        if (data.broadcasting && data.offer && !viewerPc) {
-            // Stream is live and we don't have a connection yet! Join it.
+        if (data.broadcasting && !viewerPc && data.offer) {
+            // Stream is live, Admin generated an offer for us, join!
             await joinLiveStream(data.offer);
         } else if (!data.broadcasting && viewerPc) {
             // Stream stopped
             viewerPc.close();
             viewerPc = null;
+            processedIceViewer = 0;
             videoElem.srcObject = null;
             videoElem.classList.add('d-none');
             if (waitingScreen) waitingScreen.classList.remove('d-none');
         }
+
+        // Process Admin's ICE candidates
+        if (viewerPc && data.broadcaster_ice) {
+            for (let i = processedIceViewer; i < data.broadcaster_ice.length; i++) {
+                try {
+                    await viewerPc.addIceCandidate(new RTCIceCandidate(data.broadcaster_ice[i]));
+                } catch(e) {}
+            }
+            processedIceViewer = data.broadcaster_ice.length;
+        }
+
     } catch (e) {
         console.log(e);
     }
@@ -359,7 +386,6 @@ async function checkStreamStatus() {
 async function joinLiveStream(offer) {
     viewerPc = new RTCPeerConnection(rtcConfig);
 
-    // When admin sends ICE candidates, send them to our server
     viewerPc.onicecandidate = e => {
         if (e.candidate) {
             fetch(`/videos/${slug}/rtc/viewer-ice/`, {
@@ -370,23 +396,22 @@ async function joinLiveStream(offer) {
         }
     };
 
-    // When we get the video stream, show it!
     viewerPc.ontrack = e => {
         videoElem.srcObject = e.streams[0];
-        videoElem.muted = false; // Viewers hear audio
-        videoElem.play().catch(err => console.log('Autoplay blocked:', err));
+        videoElem.muted = false; // Viewers need audio
+        videoElem.play().catch(err => {
+            console.log('Autoplay blocked, requiring user interaction');
+            createPlayOverlay();
+        });
         videoElem.classList.remove('d-none');
         if (waitingScreen) waitingScreen.classList.add('d-none');
     };
 
-    // Set remote offer
     await viewerPc.setRemoteDescription(new RTCSessionDescription(offer));
 
-    // Create answer
     const answer = await viewerPc.createAnswer();
     await viewerPc.setLocalDescription(answer);
 
-    // Send answer and token to server
     await fetch(`/videos/${slug}/rtc/answer/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -394,7 +419,6 @@ async function joinLiveStream(offer) {
     });
 }
 
-// Start viewer polling every 5 seconds if not admin
 if (!isAdmin) {
     checkStreamStatus();
     setInterval(checkStreamStatus, 5000);
