@@ -163,7 +163,7 @@
             <div class="row g-4 mb-4">
                 <div class="col-lg-4">
                     <h5 class="text-white fw-bold mb-3 d-flex align-items-center">
-                        <img src="{% static 'images/logo.png' %}" alt="Logo" height="35" class="me-2 bg-white rounded p-1">
+                        <img src="{% static 'images/logo.png' %}" alt="Logo" class="me-2 bg-white rounded p-1" style="height: 45px !important; width: auto !important;">
                         {{ site.site_name }}
                     </h5>
                     <p class="text-white-50 small mb-3">{{ site.about_text|truncatewords:30 }}</p>
@@ -271,7 +271,33 @@
         const btnMobile = document.getElementById('pwaInstallBtnMobile');
         if (btnDesktop) btnDesktop.classList.remove('d-none');
         if (btnMobile) btnMobile.classList.remove('d-none');
+
+        // Automatically show a toast banner for PWA install if not dismissed recently
+        if (!localStorage.getItem('hrc_pwa_dismissed')) {
+            setTimeout(showInstallToast, 3000);
+        }
     });
+
+    function showInstallToast() {
+        if (document.getElementById('pwaToast')) return;
+        const toast = document.createElement('div');
+        toast.id = 'pwaToast';
+        toast.className = 'position-fixed bottom-0 start-50 translate-middle-x mb-4 shadow-lg rounded-3 bg-white border border-purple p-3 d-flex align-items-center z-3';
+        toast.style.width = '90%';
+        toast.style.maxWidth = '400px';
+        toast.innerHTML = `
+            <img src="{% static 'images/logo.png' %}" style="height: 40px; width: auto;" class="me-3 rounded">
+            <div class="flex-grow-1">
+                <strong class="text-purple d-block">Install HRC App</strong>
+                <small class="text-muted">Add to home screen for quick access.</small>
+            </div>
+            <div class="d-flex flex-column gap-1 ms-2">
+                <button class="btn btn-sm btn-purple" onclick="triggerPWAInstall(); document.getElementById('pwaToast').remove();">Install</button>
+                <button class="btn btn-sm text-muted" onclick="localStorage.setItem('hrc_pwa_dismissed', 'true'); document.getElementById('pwaToast').remove();">Dismiss</button>
+            </div>
+        `;
+        document.body.appendChild(toast);
+    }
 
     function triggerPWAInstall() {
         if (deferredPrompt) {
@@ -279,6 +305,7 @@
             deferredPrompt.userChoice.then((choiceResult) => {
                 if (choiceResult.outcome === 'accepted') {
                     console.log('User installed HRC App');
+                    localStorage.setItem('hrc_pwa_dismissed', 'true');
                 }
                 deferredPrompt = null;
             });
