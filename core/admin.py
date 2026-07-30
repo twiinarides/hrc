@@ -7,7 +7,7 @@ class SiteSettingAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('General Site Branding & Hero Text', {
-            'fields': ('site_name', 'hero_title', 'hero_subtext', 'tagline', 'established_year', 'address', 'phone', 'email')
+            'fields': ('site_name', 'hero_title', 'hero_subtext', 'hero_image', 'tagline', 'established_year', 'address', 'phone', 'email')
         }),
         ('Action Buttons & Headers', {
             'fields': ('donate_button_text', 'anonymous_button_text', 'emergency_counseling_heading'),

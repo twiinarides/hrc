@@ -18,6 +18,7 @@ class SiteSetting(models.Model):
     # Additional word-by-word UI text fields
     hero_title = models.CharField(max_length=250, default="Hope Reception Centre", help_text="Main heading on homepage hero banner")
     hero_subtext = models.CharField(max_length=300, default="Giving Hope to Vulnerable Children Since 2003", help_text="Subtitle under main heading")
+    hero_image = models.ImageField(upload_to='site_settings/', blank=True, null=True, help_text="Background image for the homepage hero banner")
     donate_button_text = models.CharField(max_length=100, default="Donate Now")
     anonymous_button_text = models.CharField(max_length=100, default="Get Anonymous Support")
     emergency_counseling_heading = models.CharField(max_length=200, default="Emergency Counseling")

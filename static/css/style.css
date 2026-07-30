@@ -91,6 +91,25 @@ h1, h2, h3, h4, h5, h6 {
   z-index: 9999 !important;
 }
 
+/* On mobile: make dropdowns render inline instead of floating (prevents clipping) */
+@media (max-width: 991.98px) {
+  .navbar .dropdown-menu {
+    position: static !important;
+    float: none !important;
+    width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    background-color: var(--light-purple) !important;
+    border-radius: 8px !important;
+    margin-top: 4px !important;
+    padding: 8px 0 !important;
+  }
+  .navbar .dropdown-menu .dropdown-item {
+    padding: 10px 16px !important;
+    font-size: 0.95rem;
+  }
+}
+
 .navbar-logo {
   height: 48px;
   width: auto;
